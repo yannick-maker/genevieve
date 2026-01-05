@@ -1,56 +1,122 @@
-# CLAUDE.md
+# CLAUDE.md - Genevieve
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with the Genevieve codebase.
 
 ## Build & Run Commands
 
 ```bash
-# Build using Xcode command line
-xcodebuild -project screencoach.xcodeproj -scheme screencoach -configuration Debug -destination 'platform=macOS' build
+# Build using Swift Package Manager
+swift build
 
-# Run the app after building
-open ~/Library/Developer/Xcode/DerivedData/screencoach-*/Build/Products/Debug/screencoach.app
+# Build for release
+swift build -c release
 
-# Build using Swift Package Manager (alternative, Package.swift is in project root)
-swift build --package-path .
+# Run the app (from Genevieve directory)
+swift run Genevieve
 ```
 
 ## Architecture Overview
 
-ScreenCoach is a macOS menu bar application that monitors user screen activity and provides AI-powered productivity insights using Google's Gemini API.
+Genevieve is a macOS menu bar application that serves as an AI legal drafting co-pilot. It observes the user's screen, detects writing context, and proactively offers drafting suggestions.
 
-### Core Flow
-1. **ScreenCaptureManager** captures screenshots at 1 fps using ScreenCaptureKit
-2. **ChangeDetector** identifies significant visual changes between frames
-3. **GeminiService** analyzes screenshots to classify activity and generate insights
-4. **SessionCoordinator** orchestrates the capture-analyze loop and manages SwiftData persistence
-5. **NotificationManager** delivers productivity insights via macOS notifications
+### Core Concept
+- **Screen-aware AI** that observes writing activity across any text field
+- **Proactive suggestions** via floating sidebar - like a professional peer looking over your shoulder
+- **Multi-model support** - Claude, Gemini, and OpenAI with automatic task-based routing
 
 ### Key Components
 
-- **App/ScreenCoachApp.swift**: Main entry point. Menu bar app using `MenuBarExtra`, SwiftData container setup, onboarding flow
-- **Services/SessionCoordinator.swift**: Central state manager (`@MainActor ObservableObject`). Controls capture sessions, rate-limits analysis to 30-second intervals, creates `ActivityNote` records from AI analysis
-- **Core/AI/GeminiService.swift**: Handles Gemini API calls. Converts screenshots to JPEG, sends to `gemini-3-flash` model, parses JSON responses into `ScreenAnalysis`
-- **Core/AI/RetrospectiveGenerator.swift**: Generates end-of-day summaries from accumulated `ActivityNote` records
-- **Core/ScreenCapture/ScreenCaptureManager.swift**: SCStream wrapper, downsamples by 2x, delegates to `ChangeDetector`
-- **Views/FloatingPanel/FloatingPanelController.swift**: Always-on-top NSPanel for displaying insights
+#### App Layer (`App/`)
+- **GenevieveApp.swift**: Main entry point. Menu bar app using `MenuBarExtra`, SwiftData container setup, onboarding flow
 
-### Data Models (SwiftData)
+#### Core/AI (`Core/AI/`)
+- **AIProvider.swift**: Protocol and types for AI providers, task categories, model definitions
+- **ClaudeProvider.swift**: Anthropic Claude API implementation with streaming
+- **GeminiProvider.swift**: Google Gemini API implementation
+- **OpenAIProvider.swift**: OpenAI API implementation with streaming
+- **AIProviderService.swift**: Unified routing service with automatic model selection
+- **PromptTemplates.swift**: Legal-specific prompts for different document types
 
-- **Session**: Work session with start/end times, contains notes and feedback
-- **ActivityNote**: Individual activity record with category, focus level, timestamp
-- **Feedback**: Milestone messages (e.g., "1 hour of focused work!")
-- **Retrospective**: Daily summary with highlights, focus score, suggestions
+#### Core/Accessibility (`Core/Accessibility/`)
+- **AccessibilityTextService.swift**: macOS Accessibility API wrapper for text detection and insertion
+- **FocusedElementDetector.swift**: Higher-level writing context detection
 
-### Activity Categories
-`Coding`, `Writing`, `Communication`, `Browsing`, `Meeting`, `Design`, `Research`, `Other`
+#### Core/Observation (`Core/Observation/`)
+- **ScreenObserver.swift**: App/window tracking, distraction detection
+- **ContextAnalyzer.swift**: AI-powered document type classification
+- **StuckDetector.swift**: Multi-signal detection (pause, distraction, rewriting, navigation)
 
-### Focus Levels
-`high`, `medium`, `low`, `distracted`
+#### Core/Storage (`Core/Storage/`)
+- **KeychainManager.swift**: Secure API key storage for multiple providers
 
-## Key Patterns
+#### Services (`Services/`)
+- **DraftingCoordinator.swift**: Central orchestrator connecting all services
+- **DraftingAssistant.swift**: Suggestion generation engine
+- **ArgumentLibrary.swift**: Reusable argument storage and retrieval
+- **MatterTracker.swift**: Legal matter/case tracking
+
+#### Models (`Models/`)
+- **WritingSession.swift**: SwiftData model for session tracking
+- **DraftSuggestion.swift**: SwiftData model for suggestions
+- **Matter.swift**: SwiftData model for legal matters
+- **Argument.swift**: SwiftData model for argument library
+
+#### Views (`Views/`)
+- **Sidebar/**: Floating suggestion panel components
+  - `GenevieveSidebarController.swift`: NSPanel controller
+  - `SuggestionPanelView.swift`: Main sidebar view
+  - `SuggestionCardView.swift`: Individual suggestion cards
+- **Settings/**: Settings window
+- **Onboarding/**: First-launch flow
+- **ArgumentLibrary/**: Argument library browser
+
+### Data Flow
+
+1. **ScreenObserver** monitors active app/window
+2. **FocusedElementDetector** detects text fields via Accessibility API
+3. **ContextAnalyzer** classifies document type and section
+4. **StuckDetector** monitors for user struggle signals
+5. **DraftingAssistant** generates AI suggestions when triggered
+6. **GenevieveSidebarController** displays suggestions in floating panel
+7. **AccessibilityTextService** inserts accepted suggestions
+
+### AI Task Routing
+
+```swift
+enum AITaskCategory {
+    case draftSuggestion    // Premium tier (Claude Opus, GPT-5)
+    case contextAnalysis    // Premium tier (vision capable)
+    case quickEdit          // Standard tier (faster, cheaper)
+}
+```
+
+### Stuck Detection Signals
+
+| Signal | Weight | Description |
+|--------|--------|-------------|
+| Pause | 35% | Time without typing |
+| Distraction | 30% | Non-work app usage |
+| Rewriting | 25% | Repeated deletions/edits |
+| Navigation | 10% | Rapid scrolling |
+
+### Key Patterns
 
 - All UI-related classes are `@MainActor`
-- API key stored in Keychain via `KeychainManager`
-- Screen recording requires user permission (handled by `PermissionHandler`)
-- App is sandboxed with network client entitlement
+- API keys stored in Keychain via `KeychainManager`
+- Accessibility permission required for text detection/insertion
+- SwiftData for persistent storage
+- Combine for reactive data flow
+
+### Privacy Model
+
+- Screen observations are ephemeral (process and discard)
+- Document text kept only for current session
+- Activity patterns stored anonymized
+- All AI calls require explicit API keys
+
+### Keyboard Shortcuts
+
+- `Cmd+Shift+G`: Toggle suggestion sidebar
+- `Tab`: Accept current suggestion
+- `Esc`: Dismiss suggestion
+- `↑/↓`: Navigate suggestions
