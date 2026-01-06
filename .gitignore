@@ -22,3 +22,4 @@ xcuserdata/
 # Sensitive data
 *.env
 .env.*
+*.app

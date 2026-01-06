@@ -14,7 +14,9 @@ let package = Package(
             name: "Genevieve",
             path: "Genevieve",
             exclude: [
-                "Services/DataExportService.swift.disabled"
+                "Services/DataExportService.swift.disabled",
+                "Resources/Genevieve.entitlements",
+                "Resources/Info.plist"
             ],
             resources: [
                 .process("Resources/Assets.xcassets")
