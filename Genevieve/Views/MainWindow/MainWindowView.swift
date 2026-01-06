@@ -354,6 +354,11 @@ struct DraftingView: View {
                     .controlSize(.large)
                     .tint(.red)
                 }
+
+                // Status panel
+                StatusPanelView(coordinator: coordinator)
+                    .padding(.top, 16)
+
             } else {
                 Button(action: {
                     Task {
@@ -368,6 +373,10 @@ struct DraftingView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .tint(DesignSystem.Colors.accent)
+
+                // Permission warnings
+                PermissionStatusView(textService: coordinator.textService)
+                    .padding(.top, 16)
             }
 
             // Session info
@@ -389,6 +398,141 @@ struct DraftingView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(DesignSystem.Colors.background)
+    }
+}
+
+// MARK: - Permission Status View
+
+struct PermissionStatusView: View {
+    let textService: AccessibilityTextService
+
+    var body: some View {
+        VStack(spacing: 12) {
+            if !textService.hasAccessibilityPermission {
+                HStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Accessibility Permission Required")
+                            .font(DesignSystem.Fonts.headline)
+                        Text("Genevieve needs accessibility access to detect text fields and insert suggestions.")
+                            .font(DesignSystem.Fonts.caption)
+                            .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    }
+
+                    Spacer()
+
+                    Button("Grant Access") {
+                        textService.requestPermission()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                }
+                .padding()
+                .background(Color.orange.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+        }
+        .frame(maxWidth: 500)
+    }
+}
+
+// MARK: - Status Panel View
+
+struct StatusPanelView: View {
+    @ObservedObject var coordinator: DraftingCoordinator
+
+    var body: some View {
+        VStack(spacing: 12) {
+            // State indicator
+            HStack(spacing: 16) {
+                StatusIndicator(
+                    title: "State",
+                    value: stateText,
+                    color: stateColor
+                )
+
+                StatusIndicator(
+                    title: "Accessibility",
+                    value: coordinator.textService.hasAccessibilityPermission ? "Granted" : "Denied",
+                    color: coordinator.textService.hasAccessibilityPermission ? .green : .red
+                )
+
+                StatusIndicator(
+                    title: "AI Service",
+                    value: coordinator.aiService.hasAnyProvider ? "Ready" : "No API Key",
+                    color: coordinator.aiService.hasAnyProvider ? .green : .orange
+                )
+
+                if let appName = coordinator.textService.focusedAppName {
+                    StatusIndicator(
+                        title: "Focused App",
+                        value: appName,
+                        color: .blue
+                    )
+                }
+            }
+
+            // Writing detection status
+            if coordinator.focusedElementDetector.isWriting {
+                HStack {
+                    Image(systemName: "pencil.circle.fill")
+                        .foregroundStyle(.green)
+                    Text("Writing detected in text field")
+                        .font(DesignSystem.Fonts.caption)
+                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+                }
+            }
+        }
+        .padding()
+        .background(Color.secondary.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .frame(maxWidth: 600)
+    }
+
+    private var stateText: String {
+        switch coordinator.state {
+        case .idle: return "Idle"
+        case .observing: return "Observing"
+        case .analyzing: return "Analyzing"
+        case .generating: return "Generating"
+        case .displaying: return "Displaying"
+        case .error(let msg): return "Error: \(msg)"
+        }
+    }
+
+    private var stateColor: Color {
+        switch coordinator.state {
+        case .idle: return .gray
+        case .observing: return .green
+        case .analyzing: return .blue
+        case .generating: return .purple
+        case .displaying: return .green
+        case .error: return .red
+        }
+    }
+}
+
+struct StatusIndicator: View {
+    let title: String
+    let value: String
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 4) {
+                Circle()
+                    .fill(color)
+                    .frame(width: 8, height: 8)
+                Text(value)
+                    .font(DesignSystem.Fonts.caption)
+                    .foregroundStyle(DesignSystem.Colors.textPrimary)
+            }
+            Text(title)
+                .font(.caption2)
+                .foregroundStyle(DesignSystem.Colors.textTertiary)
+        }
     }
 }
 
