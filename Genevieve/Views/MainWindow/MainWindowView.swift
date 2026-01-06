@@ -110,175 +110,340 @@ enum MainTab: String, CaseIterable {
     }
 }
 
-// MARK: - Placeholder Views
+// MARK: - Dashboard Views
 
 struct DashboardView: View {
     @EnvironmentObject var aiService: AIProviderService
+    @Environment(\.openWindow) private var openWindow
 
-    private let cardSpacing: CGFloat = 16
-    private let horizontalPadding: CGFloat = 24
+    private let columns = [
+        GridItem(.adaptive(minimum: 240, maximum: 400), spacing: 20)
+    ]
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 32) {
+            VStack(alignment: .leading, spacing: 32) {
                 // Welcome Header
-                VStack(spacing: 8) {
-                    Image(systemName: "brain.head.profile")
-                        .font(.system(size: 48))
-                        .foregroundStyle(.tint)
-                    Text("Welcome to Genevieve")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                    Text("Your AI Legal Drafting Co-Pilot")
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Good Morning")
+                        .font(DesignSystem.Fonts.display)
+                        .foregroundStyle(DesignSystem.Colors.textPrimary)
+                    
+                    Text("Ready to draft your next masterpiece?")
+                        .font(DesignSystem.Fonts.title)
+                        .foregroundStyle(DesignSystem.Colors.textSecondary)
                 }
-                .padding(.top, 40)
+                .padding(.top, 20)
+                .padding(.horizontal, DesignSystem.Metrics.padding)
 
-                // Status Cards - using GeometryReader for equal widths
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Status")
-                        .font(.headline)
+                // Status Section
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("System Status")
+                        .genevieveSubtitle()
+                        .padding(.horizontal, DesignSystem.Metrics.padding)
 
-                    HStack(spacing: cardSpacing) {
+                    LazyVGrid(columns: columns, spacing: 20) {
                         StatusCard(
-                            title: "AI Status",
-                            value: aiService.hasAnyProvider ? "Ready" : "Setup Required",
-                            icon: "cpu",
-                            color: aiService.hasAnyProvider ? .green : .orange
+                            title: "AI Engine",
+                            value: aiService.hasAnyProvider ? "Online" : "Offline",
+                            subtitle: aiService.hasAnyProvider ? "Ready to process" : "Configuration required",
+                            icon: "brain.head.profile",
+                            color: aiService.hasAnyProvider ? DesignSystem.Colors.success : DesignSystem.Colors.warning
                         )
 
                         StatusCard(
-                            title: "Default Model",
+                            title: "Active Model",
                             value: aiService.defaultModel.displayName,
-                            icon: "brain",
-                            color: .blue
+                            subtitle: "Current provider",
+                            icon: "cpu",
+                            color: DesignSystem.Colors.info
                         )
 
                         StatusCard(
                             title: "Providers",
-                            value: "\(aiService.configuredProviders.count) configured",
+                            value: "\(aiService.configuredProviders.count)",
+                            subtitle: "Configured services",
                             icon: "server.rack",
                             color: .purple
                         )
                     }
+                    .padding(.horizontal, DesignSystem.Metrics.padding)
                 }
-                .padding(.horizontal, horizontalPadding)
 
-                // Quick Actions
-                VStack(alignment: .leading, spacing: 12) {
+                // Quick Actions Section
+                VStack(alignment: .leading, spacing: 16) {
                     Text("Quick Actions")
-                        .font(.headline)
+                        .genevieveSubtitle()
+                        .padding(.horizontal, DesignSystem.Metrics.padding)
 
-                    HStack(spacing: cardSpacing) {
+                    LazyVGrid(columns: columns, spacing: 20) {
                         QuickActionButton(
                             title: "Start Drafting",
+                            description: "Open the assistant",
                             icon: "wand.and.stars",
-                            color: .blue
+                            gradient: LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
                         ) {
-                            // TODO: Open drafting
+                            // TODO: Navigate to drafting
                         }
 
                         QuickActionButton(
-                            title: "Browse Arguments",
+                            title: "Argument Library",
+                            description: "Browse saved arguments",
                             icon: "books.vertical",
-                            color: .purple
+                            gradient: LinearGradient(colors: [.orange, .red], startPoint: .topLeading, endPoint: .bottomTrailing)
                         ) {
-                            // TODO: Open arguments
+                            // TODO: Navigate to arguments
                         }
 
                         QuickActionButton(
-                            title: "Configure AI",
+                            title: "Settings",
+                            description: "Configure AI models",
                             icon: "gear",
-                            color: .gray
+                            gradient: LinearGradient(colors: [.gray, .secondary], startPoint: .topLeading, endPoint: .bottomTrailing)
                         ) {
                             // TODO: Open settings
                         }
                     }
+                    .padding(.horizontal, DesignSystem.Metrics.padding)
                 }
-                .padding(.horizontal, horizontalPadding)
-
+                
                 Spacer()
             }
+            .padding(.bottom, 40)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(DesignSystem.Colors.background)
     }
 }
 
 struct StatusCard: View {
     let title: String
     let value: String
+    let subtitle: String
     let icon: String
     let color: Color
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundStyle(color)
+        HStack(alignment: .top, spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.1))
+                    .frame(width: 48, height: 48)
+                
+                Image(systemName: icon)
+                    .font(.title2)
+                    .foregroundStyle(color)
+            }
 
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(DesignSystem.Fonts.caption)
+                    .foregroundStyle(DesignSystem.Colors.textSecondary)
+                
+                Text(value)
+                    .font(DesignSystem.Fonts.title)
+                    .foregroundStyle(DesignSystem.Colors.textPrimary)
+                
+                Text(subtitle)
+                    .font(DesignSystem.Fonts.caption)
+                    .foregroundStyle(DesignSystem.Colors.textTertiary)
+            }
+            
             Spacer()
-
-            Text(value)
-                .font(.headline)
-                .lineLimit(1)
-
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(height: 100)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .genevieveCardStyle()
     }
 }
 
 struct QuickActionButton: View {
     let title: String
+    let description: String
     let icon: String
-    let color: Color
+    let gradient: LinearGradient
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.title)
-                    .foregroundStyle(color)
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(gradient)
+                        .frame(width: 48, height: 48)
+                    
+                    Image(systemName: icon)
+                        .font(.title3)
+                        .foregroundStyle(.white)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(DesignSystem.Fonts.headline)
+                        .foregroundStyle(DesignSystem.Colors.textPrimary)
+                    
+                    Text(description)
+                        .font(DesignSystem.Fonts.caption)
+                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(DesignSystem.Colors.textTertiary)
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 80)
-            .padding(.horizontal)
-            .background(Color(nsColor: .controlBackgroundColor))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .contentShape(Rectangle()) // Make entire area clickable
         }
         .buttonStyle(.plain)
+        .genevieveCardStyle(interactable: true)
     }
 }
 
 struct DraftingView: View {
+    @EnvironmentObject var coordinator: DraftingCoordinator
+
     var body: some View {
-        ContentUnavailableView(
-            "Drafting Assistant",
-            systemImage: "wand.and.stars",
-            description: Text("Start writing and Genevieve will offer suggestions")
-        )
+        VStack(spacing: 24) {
+            Spacer()
+
+            Image(systemName: "wand.and.stars")
+                .font(.system(size: 64))
+                .foregroundStyle(DesignSystem.Colors.primaryGradient)
+                .symbolEffect(.pulse, isActive: coordinator.isActive)
+
+            VStack(spacing: 12) {
+                Text("Drafting Assistant")
+                    .font(DesignSystem.Fonts.display)
+                    .foregroundStyle(DesignSystem.Colors.textPrimary)
+
+                if coordinator.isActive {
+                    Text("Genevieve is watching your writing.\nPress Cmd+Shift+G to toggle the suggestion sidebar.")
+                        .font(DesignSystem.Fonts.body)
+                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 400)
+                } else {
+                    Text("Start writing in any text editor and Genevieve will follow along,\nor create a dedicated session here.")
+                        .font(DesignSystem.Fonts.body)
+                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 400)
+                }
+            }
+
+            if coordinator.isActive {
+                HStack(spacing: 16) {
+                    Button(action: {
+                        coordinator.toggleSidebar()
+                    }) {
+                        Label("Toggle Sidebar", systemImage: "sidebar.right")
+                            .font(DesignSystem.Fonts.headline)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
+
+                    Button(action: {
+                        coordinator.stop()
+                    }) {
+                        Label("End Session", systemImage: "stop.fill")
+                            .font(DesignSystem.Fonts.headline)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
+                    .tint(.red)
+                }
+            } else {
+                Button(action: {
+                    Task {
+                        await coordinator.start()
+                    }
+                }) {
+                    Label("Start New Session", systemImage: "plus")
+                        .font(DesignSystem.Fonts.headline)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .tint(DesignSystem.Colors.accent)
+            }
+
+            // Session info
+            if coordinator.isActive, let session = coordinator.currentSession {
+                VStack(spacing: 8) {
+                    Divider()
+                        .padding(.vertical)
+
+                    HStack(spacing: 24) {
+                        SessionStatView(title: "Duration", value: session.formattedDuration)
+                        SessionStatView(title: "Suggestions", value: "\(session.suggestionsShown)")
+                        SessionStatView(title: "Accepted", value: "\(session.suggestionsAccepted)")
+                    }
+                }
+                .padding(.top, 20)
+            }
+
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(DesignSystem.Colors.background)
+    }
+}
+
+struct SessionStatView: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(DesignSystem.Fonts.title)
+                .foregroundStyle(DesignSystem.Colors.textPrimary)
+            Text(title)
+                .font(DesignSystem.Fonts.caption)
+                .foregroundStyle(DesignSystem.Colors.textTertiary)
+        }
     }
 }
 
 struct MattersView: View {
     var body: some View {
-        ContentUnavailableView(
-            "Matters",
-            systemImage: "folder",
-            description: Text("Track your legal matters and cases")
-        )
+        VStack(spacing: 24) {
+            Spacer()
+            
+            Image(systemName: "folder.badge.plus")
+                .font(.system(size: 64))
+                .foregroundStyle(DesignSystem.Colors.textTertiary)
+            
+            VStack(spacing: 12) {
+                Text("No Matters Found")
+                    .font(DesignSystem.Fonts.display)
+                    .foregroundStyle(DesignSystem.Colors.textPrimary)
+                
+                Text("Organize your work by Matter to get context-aware suggestions\nbased on specific clients and case laws.")
+                    .font(DesignSystem.Fonts.body)
+                    .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 400)
+            }
+            
+            Button(action: {
+                // TODO: Create matter action
+            }) {
+                Label("Create New Matter", systemImage: "plus.circle.fill")
+                    .font(DesignSystem.Fonts.headline)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(DesignSystem.Colors.background)
     }
 }
 
@@ -352,5 +517,6 @@ struct SessionsView: View {
 #Preview {
     MainWindowView()
         .environmentObject(AIProviderService())
+        .environmentObject(DraftingCoordinator())
         .frame(width: 900, height: 700)
 }

@@ -8,6 +8,7 @@ struct GenevieveApp: App {
 
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var aiService = AIProviderService()
+    @StateObject private var coordinator: DraftingCoordinator
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     // MARK: - SwiftData
@@ -28,10 +29,15 @@ struct GenevieveApp: App {
                 schema: schema,
                 isStoredInMemoryOnly: false
             )
-            modelContainer = try ModelContainer(
+            let container = try ModelContainer(
                 for: schema,
                 configurations: [modelConfiguration]
             )
+            modelContainer = container
+
+            // Initialize coordinator with model context
+            let context = ModelContext(container)
+            _coordinator = StateObject(wrappedValue: DraftingCoordinator(modelContext: context))
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
@@ -44,6 +50,7 @@ struct GenevieveApp: App {
         WindowGroup {
             MainWindowView()
                 .environmentObject(aiService)
+                .environmentObject(coordinator)
                 .modelContainer(modelContainer)
         }
         .windowStyle(.titleBar)

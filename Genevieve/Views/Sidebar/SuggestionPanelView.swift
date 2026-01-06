@@ -12,6 +12,7 @@ struct SuggestionPanelView: View {
 
     @State private var selectedSuggestionID: UUID?
     @State private var showingSettings = false
+    @State private var isCompact = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -35,8 +36,7 @@ struct SuggestionPanelView: View {
             footerView
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(nsColor: .windowBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .background(DesignSystem.Colors.background)
     }
 
     // MARK: - Header
@@ -47,10 +47,11 @@ struct SuggestionPanelView: View {
             HStack(spacing: 8) {
                 Image(systemName: "brain.head.profile")
                     .font(.title3)
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(DesignSystem.Colors.accent)
 
                 Text("Genevieve")
-                    .font(.headline)
+                    .font(DesignSystem.Fonts.headline)
+                    .foregroundStyle(DesignSystem.Colors.textPrimary)
             }
 
             Spacer()
@@ -59,20 +60,20 @@ struct SuggestionPanelView: View {
             if let analysis = contextAnalyzer.currentAnalysis {
                 HStack(spacing: 4) {
                     Text(analysis.documentType.displayName)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(DesignSystem.Fonts.caption)
+                        .foregroundStyle(DesignSystem.Colors.textSecondary)
 
                     if let section = analysis.section, section != .unknown {
                         Text("•")
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(DesignSystem.Colors.textTertiary)
                         Text(section.displayName)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(DesignSystem.Fonts.caption)
+                            .foregroundStyle(DesignSystem.Colors.textSecondary)
                     }
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(Color.secondary.opacity(0.1))
+                .background(DesignSystem.Colors.surfaceHighlight)
                 .clipShape(Capsule())
             }
 
@@ -80,7 +81,7 @@ struct SuggestionPanelView: View {
             Button(action: { sidebarController.togglePin() }) {
                 Image(systemName: sidebarController.isPinned ? "pin.fill" : "pin")
                     .font(.caption)
-                    .foregroundStyle(sidebarController.isPinned ? Color.accentColor : .secondary)
+                    .foregroundStyle(sidebarController.isPinned ? DesignSystem.Colors.accent : DesignSystem.Colors.textSecondary)
             }
             .buttonStyle(.plain)
             .help(sidebarController.isPinned ? "Unpin sidebar" : "Pin sidebar")
@@ -89,15 +90,16 @@ struct SuggestionPanelView: View {
             Button(action: { showingSettings.toggle() }) {
                 Image(systemName: "gear")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DesignSystem.Colors.textSecondary)
             }
             .buttonStyle(.plain)
             .popover(isPresented: $showingSettings) {
-                SidebarSettingsView(sidebarController: sidebarController)
-                    .frame(width: 220)
+                SidebarSettingsView(sidebarController: sidebarController, isCompact: $isCompact)
+                    .frame(width: 250)
             }
         }
-        .padding()
+        .padding(DesignSystem.Metrics.padding)
+        .background(DesignSystem.Colors.surface)
     }
 
     // MARK: - Loading View
@@ -110,8 +112,8 @@ struct SuggestionPanelView: View {
                 .controlSize(.large)
 
             Text("Analyzing your text...")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(DesignSystem.Fonts.body)
+                .foregroundStyle(DesignSystem.Colors.textSecondary)
 
             Spacer()
         }
@@ -121,20 +123,21 @@ struct SuggestionPanelView: View {
     // MARK: - Empty State
 
     private var emptyStateView: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 24) {
             Spacer()
 
             Image(systemName: "text.cursor")
-                .font(.system(size: 40))
-                .foregroundStyle(.tertiary)
+                .font(.system(size: 48))
+                .foregroundStyle(DesignSystem.Colors.textTertiary)
 
-            VStack(spacing: 8) {
+            VStack(spacing: 12) {
                 Text("Ready to Help")
-                    .font(.headline)
+                    .font(DesignSystem.Fonts.title)
+                    .foregroundStyle(DesignSystem.Colors.textPrimary)
 
                 Text("Start writing in any text field and I'll offer suggestions to improve your draft.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(DesignSystem.Fonts.body)
+                    .foregroundStyle(DesignSystem.Colors.textSecondary)
                     .multilineTextAlignment(.center)
             }
             .padding(.horizontal, 20)
@@ -142,31 +145,34 @@ struct SuggestionPanelView: View {
             Spacer()
 
             // Tips
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Tips")
+                    .font(DesignSystem.Fonts.headline)
+                    .foregroundStyle(DesignSystem.Colors.textPrimary)
+                
                 tipRow(icon: "keyboard", text: "Cmd+Shift+G toggles this sidebar")
                 tipRow(icon: "return", text: "Tab to accept a suggestion")
                 tipRow(icon: "escape", text: "Esc to dismiss")
             }
-            .padding()
-            .background(Color.secondary.opacity(0.05))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .padding(.horizontal)
-
-            Spacer()
+            .padding(DesignSystem.Metrics.padding)
+            .background(DesignSystem.Colors.surface)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Metrics.cornerRadius))
+            .padding(.horizontal, DesignSystem.Metrics.padding)
+            .padding(.bottom, DesignSystem.Metrics.padding)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func tipRow(icon: String, text: String) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DesignSystem.Colors.textSecondary)
                 .frame(width: 16)
 
             Text(text)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(DesignSystem.Fonts.caption)
+                .foregroundStyle(DesignSystem.Colors.textSecondary)
         }
     }
 
@@ -179,6 +185,7 @@ struct SuggestionPanelView: View {
                     SuggestionCardView(
                         suggestion: suggestion,
                         isSelected: selectedSuggestionID == suggestion.id,
+                        isCompact: isCompact,
                         onAccept: {
                             onAccept(suggestion)
                         },
@@ -200,7 +207,7 @@ struct SuggestionPanelView: View {
                     }
                 }
             }
-            .padding()
+            .padding(DesignSystem.Metrics.padding)
         }
     }
 
@@ -211,19 +218,20 @@ struct SuggestionPanelView: View {
             // Suggestion count
             if !draftingAssistant.currentSuggestions.isEmpty {
                 Text("\(draftingAssistant.currentSuggestions.count) suggestions")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(DesignSystem.Fonts.caption)
+                    .foregroundStyle(DesignSystem.Colors.textTertiary)
             }
 
             Spacer()
 
             // Keyboard hint
             Text("Tab: accept • Esc: dismiss")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+                .font(DesignSystem.Fonts.caption)
+                .foregroundStyle(DesignSystem.Colors.textTertiary)
         }
-        .padding(.horizontal)
+        .padding(.horizontal, DesignSystem.Metrics.padding)
         .padding(.vertical, 8)
+        .background(DesignSystem.Colors.surface)
     }
 }
 
@@ -231,90 +239,82 @@ struct SuggestionPanelView: View {
 
 struct SidebarSettingsView: View {
     @ObservedObject var sidebarController: GenevieveSidebarController
+    @Binding var isCompact: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             Text("Sidebar Settings")
-                .font(.headline)
+                .font(DesignSystem.Fonts.headline)
+                .foregroundStyle(DesignSystem.Colors.textPrimary)
 
             Divider()
 
-            // Position picker
-            HStack {
+            // View Options
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Appearance")
+                    .font(DesignSystem.Fonts.caption)
+                    .foregroundStyle(DesignSystem.Colors.textTertiary)
+                
+                Toggle("Compact suggestions", isOn: $isCompact)
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                
+                Toggle("Keep sidebar visible", isOn: Binding(
+                    get: { sidebarController.isPinned },
+                    set: { _ in sidebarController.togglePin() }
+                ))
+                .toggleStyle(.switch)
+                .controlSize(.small)
+            }
+
+            Divider()
+            
+            // Position
+            VStack(alignment: .leading, spacing: 12) {
                 Text("Position")
-                    .font(.subheadline)
-                Spacer()
+                    .font(DesignSystem.Fonts.caption)
+                    .foregroundStyle(DesignSystem.Colors.textTertiary)
+                
                 Picker("", selection: $sidebarController.position) {
                     ForEach(GenevieveSidebarController.SidebarPosition.allCases, id: \.self) { pos in
                         Text(pos.displayName).tag(pos)
                     }
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 100)
             }
             .onChange(of: sidebarController.position) { _, newValue in
                 sidebarController.moveTo(newValue)
             }
 
-            // Pin toggle
-            Toggle("Keep sidebar visible", isOn: Binding(
-                get: { sidebarController.isPinned },
-                set: { _ in sidebarController.togglePin() }
-            ))
-            .font(.subheadline)
-
             Divider()
 
             // Keyboard shortcuts info
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Keyboard Shortcuts")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(DesignSystem.Fonts.caption)
+                    .foregroundStyle(DesignSystem.Colors.textTertiary)
 
                 shortcutRow("Toggle sidebar", "Cmd+Shift+G")
                 shortcutRow("Accept suggestion", "Tab")
                 shortcutRow("Dismiss", "Esc")
-                shortcutRow("Next suggestion", "↓")
-                shortcutRow("Previous suggestion", "↑")
             }
         }
-        .padding()
+        .padding(DesignSystem.Metrics.padding)
     }
 
     private func shortcutRow(_ action: String, _ shortcut: String) -> some View {
         HStack {
             Text(action)
-                .font(.caption)
+                .font(DesignSystem.Fonts.caption)
+                .foregroundStyle(DesignSystem.Colors.textSecondary)
             Spacer()
             Text(shortcut)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(DesignSystem.Fonts.monospaceNumeric)
+                .foregroundStyle(DesignSystem.Colors.textPrimary)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(Color.secondary.opacity(0.1))
+                .background(DesignSystem.Colors.surfaceHighlight)
                 .clipShape(RoundedRectangle(cornerRadius: 4))
         }
     }
-}
-
-// MARK: - Preview
-
-#Preview {
-    let draftingAssistant = DraftingAssistant(
-        aiService: AIProviderService()
-    )
-    let sidebarController = GenevieveSidebarController()
-    let contextAnalyzer = ContextAnalyzer(
-        aiService: AIProviderService()
-    )
-
-    return SuggestionPanelView(
-        draftingAssistant: draftingAssistant,
-        sidebarController: sidebarController,
-        contextAnalyzer: contextAnalyzer,
-        onAccept: { _ in },
-        onReject: { _ in },
-        onCopy: { _ in }
-    )
-    .frame(width: 300, height: 600)
 }
