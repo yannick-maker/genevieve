@@ -52,8 +52,8 @@ enum AIModel: String, Codable, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .claude4Sonnet: return "Claude 4 Sonnet"
-        case .claude4Opus: return "Claude 4 Opus"
+        case .claude4Sonnet: return "Claude 4.5 Sonnet"
+        case .claude4Opus: return "Claude 4.5 Opus"
         case .gemini3Pro: return "Gemini 3 Pro"
         case .gemini3Flash: return "Gemini 3 Flash"
         case .gpt52: return "GPT-5.2"
@@ -64,9 +64,9 @@ enum AIModel: String, Codable, CaseIterable, Identifiable {
     var qualityTier: QualityTier {
         switch self {
         case .claude4Opus, .gpt52Pro, .gemini3Pro:
-            return .premium
+            return .smart
         case .claude4Sonnet, .gpt52, .gemini3Flash:
-            return .standard
+            return .fast
         }
     }
 
@@ -81,8 +81,8 @@ enum AIModel: String, Codable, CaseIterable, Identifiable {
 }
 
 enum QualityTier: Int, Comparable, Codable {
-    case standard = 1
-    case premium = 2
+    case fast = 1
+    case smart = 2
 
     static func < (lhs: QualityTier, rhs: QualityTier) -> Bool {
         lhs.rawValue < rhs.rawValue
@@ -218,11 +218,11 @@ enum AITaskCategory {
     var recommendedTier: QualityTier {
         switch self {
         case .draftSuggestion, .argumentRefinement, .stuckAssistance:
-            return .premium
+            return .smart
         case .contextAnalysis:
-            return .premium
+            return .smart
         case .quickEdit, .documentClassification:
-            return .standard
+            return .fast
         }
     }
 

@@ -241,13 +241,13 @@ final class AIProviderService: ObservableObject {
         }
 
         // Check quality tier preference
-        if task.recommendedTier == .premium && model.qualityTier < .premium {
-            // Still allow standard if no premium available
-            let premiumAvailable = AIModel.allCases
-                .filter { $0.qualityTier >= .premium }
+        if task.recommendedTier == .smart && model.qualityTier < .smart {
+            // Still allow fast if no smart model available
+            let smartAvailable = AIModel.allCases
+                .filter { $0.qualityTier >= .smart }
                 .contains { isModelAvailable($0) }
-            if premiumAvailable {
-                return model.qualityTier >= .premium
+            if smartAvailable {
+                return model.qualityTier >= .smart
             }
         }
 

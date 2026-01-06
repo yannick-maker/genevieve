@@ -251,11 +251,11 @@ struct ModelsSettingsTab: View {
                         Spacer()
 
                         // Quality tier badge
-                        Text(model.qualityTier == .premium ? "Premium" : "Standard")
+                        Text(model.qualityTier == .smart ? "Smart" : "Fast")
                             .font(.caption2)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(model.qualityTier == .premium ? Color.purple.opacity(0.2) : Color.gray.opacity(0.2))
+                            .background(model.qualityTier == .smart ? Color.purple.opacity(0.2) : Color.blue.opacity(0.2))
                             .clipShape(Capsule())
 
                         // Vision support badge
