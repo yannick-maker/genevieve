@@ -73,21 +73,36 @@ final class KeychainManager: @unchecked Sendable {
             throw KeychainError.invalidData
         }
 
-        // Delete existing item first (upsert pattern)
-        try? delete(for: key)
-
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: serviceName,
-            kSecAttrAccount as String: key.rawValue,
-            kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+            kSecAttrAccount as String: key.rawValue
         ]
 
-        let status = SecItemAdd(query as CFDictionary, nil)
+        // Check if item already exists
+        let existsStatus = SecItemCopyMatching(query as CFDictionary, nil)
 
-        guard status == errSecSuccess else {
-            throw KeychainError.saveFailed(status)
+        if existsStatus == errSecSuccess {
+            // Item exists, update it
+            let updateAttributes: [String: Any] = [
+                kSecValueData as String: data
+            ]
+            let updateStatus = SecItemUpdate(query as CFDictionary, updateAttributes as CFDictionary)
+            guard updateStatus == errSecSuccess else {
+                throw KeychainError.saveFailed(updateStatus)
+            }
+        } else if existsStatus == errSecItemNotFound {
+            // Item doesn't exist, add it
+            var addQuery = query
+            addQuery[kSecValueData as String] = data
+            addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+
+            let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
+            guard addStatus == errSecSuccess else {
+                throw KeychainError.saveFailed(addStatus)
+            }
+        } else {
+            throw KeychainError.saveFailed(existsStatus)
         }
     }
 
