@@ -1,0 +1,746 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		/* App */
+		A1000001001800000000001D /* GenevieveApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001001800000000001C /* GenevieveApp.swift */; };
+
+		/* Models */
+		A1000002001800000000001D /* WritingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000002001800000000001C /* WritingSession.swift */; };
+		A1000003001800000000001D /* DraftSuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000003001800000000001C /* DraftSuggestion.swift */; };
+		A1000004001800000000001D /* Argument.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000004001800000000001C /* Argument.swift */; };
+		A1000005001800000000001D /* Matter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000005001800000000001C /* Matter.swift */; };
+
+		/* Core/AI */
+		A1000010001800000000001D /* AIProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000010001800000000001C /* AIProvider.swift */; };
+		A1000011001800000000001D /* ClaudeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000011001800000000001C /* ClaudeProvider.swift */; };
+		A1000012001800000000001D /* GeminiProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000012001800000000001C /* GeminiProvider.swift */; };
+		A1000013001800000000001D /* OpenAIProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000013001800000000001C /* OpenAIProvider.swift */; };
+		A1000014001800000000001D /* AIProviderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000014001800000000001C /* AIProviderService.swift */; };
+		A1000015001800000000001D /* PromptTemplates.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000015001800000000001C /* PromptTemplates.swift */; };
+
+		/* Core/Accessibility */
+		A1000020001800000000001D /* AccessibilityTextService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000020001800000000001C /* AccessibilityTextService.swift */; };
+		A1000021001800000000001D /* FocusedElementDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000021001800000000001C /* FocusedElementDetector.swift */; };
+
+		/* Core/Observation */
+		A1000030001800000000001D /* ScreenObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000030001800000000001C /* ScreenObserver.swift */; };
+		A1000031001800000000001D /* ContextAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000031001800000000001C /* ContextAnalyzer.swift */; };
+		A1000032001800000000001D /* StuckDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000032001800000000001C /* StuckDetector.swift */; };
+
+		/* Core/Storage */
+		A1000040001800000000001D /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000040001800000000001C /* KeychainManager.swift */; };
+
+		/* Core/Performance */
+		A1000041001800000000001D /* BatteryAwareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000041001800000000001C /* BatteryAwareService.swift */; };
+
+		/* Core/ErrorHandling */
+		A1000042001800000000001D /* ErrorRecoveryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000042001800000000001C /* ErrorRecoveryService.swift */; };
+
+		/* Services */
+		A1000050001800000000001D /* DraftingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000050001800000000001C /* DraftingCoordinator.swift */; };
+		A1000051001800000000001D /* DraftingAssistant.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000051001800000000001C /* DraftingAssistant.swift */; };
+		A1000052001800000000001D /* ArgumentLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000052001800000000001C /* ArgumentLibrary.swift */; };
+		A1000053001800000000001D /* MatterTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000053001800000000001C /* MatterTracker.swift */; };
+		A1000054001800000000001D /* LearningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000054001800000000001C /* LearningService.swift */; };
+
+		/* Views/Sidebar */
+		A1000060001800000000001D /* GenevieveSidebarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000060001800000000001C /* GenevieveSidebarController.swift */; };
+		A1000061001800000000001D /* SuggestionPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000061001800000000001C /* SuggestionPanelView.swift */; };
+		A1000062001800000000001D /* SuggestionCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000062001800000000001C /* SuggestionCardView.swift */; };
+
+		/* Views/Settings */
+		A1000070001800000000001D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000070001800000000001C /* SettingsView.swift */; };
+
+		/* Views/Onboarding */
+		A1000080001800000000001D /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000080001800000000001C /* OnboardingView.swift */; };
+
+		/* Views/ArgumentLibrary */
+		A1000090001800000000001D /* ArgumentLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000090001800000000001C /* ArgumentLibraryView.swift */; };
+
+		/* Views/MainWindow */
+		A1000091001800000000001D /* MainWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000091001800000000001C /* MainWindowView.swift */; };
+
+		/* Views/MorningBriefing */
+		A1000092001800000000001D /* MorningBriefingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000092001800000000001C /* MorningBriefingView.swift */; };
+
+		/* Resources */
+		A10000A0001800000000001D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10000A0001800000000001C /* Assets.xcassets */; };
+		A10000A1001800000000001D /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000A1001800000000001C /* DesignSystem.swift */; };
+
+		/* Frameworks */
+		A10000B0001800000000001D /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000B0001800000000001C /* AppKit.framework */; };
+		A10000B1001800000000001D /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000B1001800000000001C /* ApplicationServices.framework */; };
+		A10000B2001800000000001D /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000B2001800000000001C /* SwiftUI.framework */; };
+		A10000B3001800000000001D /* Combine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000B3001800000000001C /* Combine.framework */; };
+		A10000B4001800000000001D /* SwiftData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000B4001800000000001C /* SwiftData.framework */; };
+		A10000B5001800000000001D /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000B5001800000000001C /* IOKit.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		/* Product */
+		A1000000001800000000000A /* Genevieve.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Genevieve.app; sourceTree = BUILT_PRODUCTS_DIR; };
+
+		/* App */
+		A1000001001800000000001C /* GenevieveApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenevieveApp.swift; sourceTree = "<group>"; };
+
+		/* Models */
+		A1000002001800000000001C /* WritingSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WritingSession.swift; sourceTree = "<group>"; };
+		A1000003001800000000001C /* DraftSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftSuggestion.swift; sourceTree = "<group>"; };
+		A1000004001800000000001C /* Argument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Argument.swift; sourceTree = "<group>"; };
+		A1000005001800000000001C /* Matter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Matter.swift; sourceTree = "<group>"; };
+
+		/* Core/AI/Providers */
+		A1000010001800000000001C /* AIProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProvider.swift; sourceTree = "<group>"; };
+		A1000011001800000000001C /* ClaudeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeProvider.swift; sourceTree = "<group>"; };
+		A1000012001800000000001C /* GeminiProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiProvider.swift; sourceTree = "<group>"; };
+		A1000013001800000000001C /* OpenAIProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIProvider.swift; sourceTree = "<group>"; };
+		A1000014001800000000001C /* AIProviderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProviderService.swift; sourceTree = "<group>"; };
+		A1000015001800000000001C /* PromptTemplates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptTemplates.swift; sourceTree = "<group>"; };
+
+		/* Core/Accessibility */
+		A1000020001800000000001C /* AccessibilityTextService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityTextService.swift; sourceTree = "<group>"; };
+		A1000021001800000000001C /* FocusedElementDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusedElementDetector.swift; sourceTree = "<group>"; };
+
+		/* Core/Observation */
+		A1000030001800000000001C /* ScreenObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenObserver.swift; sourceTree = "<group>"; };
+		A1000031001800000000001C /* ContextAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextAnalyzer.swift; sourceTree = "<group>"; };
+		A1000032001800000000001C /* StuckDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StuckDetector.swift; sourceTree = "<group>"; };
+
+		/* Core/Storage */
+		A1000040001800000000001C /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
+
+		/* Core/Performance */
+		A1000041001800000000001C /* BatteryAwareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryAwareService.swift; sourceTree = "<group>"; };
+
+		/* Core/ErrorHandling */
+		A1000042001800000000001C /* ErrorRecoveryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorRecoveryService.swift; sourceTree = "<group>"; };
+
+		/* Services */
+		A1000050001800000000001C /* DraftingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftingCoordinator.swift; sourceTree = "<group>"; };
+		A1000051001800000000001C /* DraftingAssistant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftingAssistant.swift; sourceTree = "<group>"; };
+		A1000052001800000000001C /* ArgumentLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArgumentLibrary.swift; sourceTree = "<group>"; };
+		A1000053001800000000001C /* MatterTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatterTracker.swift; sourceTree = "<group>"; };
+		A1000054001800000000001C /* LearningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearningService.swift; sourceTree = "<group>"; };
+
+		/* Views/Sidebar */
+		A1000060001800000000001C /* GenevieveSidebarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenevieveSidebarController.swift; sourceTree = "<group>"; };
+		A1000061001800000000001C /* SuggestionPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionPanelView.swift; sourceTree = "<group>"; };
+		A1000062001800000000001C /* SuggestionCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionCardView.swift; sourceTree = "<group>"; };
+
+		/* Views/Settings */
+		A1000070001800000000001C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+
+		/* Views/Onboarding */
+		A1000080001800000000001C /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+
+		/* Views/ArgumentLibrary */
+		A1000090001800000000001C /* ArgumentLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArgumentLibraryView.swift; sourceTree = "<group>"; };
+
+		/* Views/MainWindow */
+		A1000091001800000000001C /* MainWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowView.swift; sourceTree = "<group>"; };
+
+		/* Views/MorningBriefing */
+		A1000092001800000000001C /* MorningBriefingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MorningBriefingView.swift; sourceTree = "<group>"; };
+
+		/* Resources */
+		A10000A0001800000000001C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A10000A1001800000000001C /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		A10000A2001800000000001C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A10000A3001800000000001C /* Genevieve.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Genevieve.entitlements; sourceTree = "<group>"; };
+
+		/* Frameworks */
+		A10000B0001800000000001C /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		A10000B1001800000000001C /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = System/Library/Frameworks/ApplicationServices.framework; sourceTree = SDKROOT; };
+		A10000B2001800000000001C /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		A10000B3001800000000001C /* Combine.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Combine.framework; path = System/Library/Frameworks/Combine.framework; sourceTree = SDKROOT; };
+		A10000B4001800000000001C /* SwiftData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftData.framework; path = System/Library/Frameworks/SwiftData.framework; sourceTree = SDKROOT; };
+		A10000B5001800000000001C /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A1000000001800000000000B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000B0001800000000001D /* AppKit.framework in Frameworks */,
+				A10000B1001800000000001D /* ApplicationServices.framework in Frameworks */,
+				A10000B2001800000000001D /* SwiftUI.framework in Frameworks */,
+				A10000B3001800000000001D /* Combine.framework in Frameworks */,
+				A10000B4001800000000001D /* SwiftData.framework in Frameworks */,
+				A10000B5001800000000001D /* IOKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A1000000001800000000000C /* Root */ = {
+			isa = PBXGroup;
+			children = (
+				A1000000001800000000000D /* Genevieve */,
+				A1000000001800000000000E /* Frameworks */,
+				A1000000001800000000000F /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A1000000001800000000000D /* Genevieve */ = {
+			isa = PBXGroup;
+			children = (
+				A1000000001800000000100A /* App */,
+				A1000000001800000000100B /* Core */,
+				A1000000001800000000100C /* Models */,
+				A1000000001800000000100D /* Services */,
+				A1000000001800000000100E /* Views */,
+				A1000000001800000000100F /* Resources */,
+			);
+			path = Genevieve;
+			sourceTree = "<group>";
+		};
+		A1000000001800000000000E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A10000B0001800000000001C /* AppKit.framework */,
+				A10000B1001800000000001C /* ApplicationServices.framework */,
+				A10000B2001800000000001C /* SwiftUI.framework */,
+				A10000B3001800000000001C /* Combine.framework */,
+				A10000B4001800000000001C /* SwiftData.framework */,
+				A10000B5001800000000001C /* IOKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A1000000001800000000000F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A1000000001800000000000A /* Genevieve.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A1000000001800000000100A /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001001800000000001C /* GenevieveApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A1000000001800000000100B /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				A100000000180000000010BA /* AI */,
+				A100000000180000000010BB /* Accessibility */,
+				A100000000180000000010BC /* Observation */,
+				A100000000180000000010BD /* Storage */,
+				A100000000180000000010BE /* Performance */,
+				A100000000180000000010BF /* ErrorHandling */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		A100000000180000000010BA /* AI */ = {
+			isa = PBXGroup;
+			children = (
+				A100000000180000000010CA /* Providers */,
+				A1000014001800000000001C /* AIProviderService.swift */,
+				A1000015001800000000001C /* PromptTemplates.swift */,
+			);
+			path = AI;
+			sourceTree = "<group>";
+		};
+		A100000000180000000010CA /* Providers */ = {
+			isa = PBXGroup;
+			children = (
+				A1000010001800000000001C /* AIProvider.swift */,
+				A1000011001800000000001C /* ClaudeProvider.swift */,
+				A1000012001800000000001C /* GeminiProvider.swift */,
+				A1000013001800000000001C /* OpenAIProvider.swift */,
+			);
+			path = Providers;
+			sourceTree = "<group>";
+		};
+		A100000000180000000010BB /* Accessibility */ = {
+			isa = PBXGroup;
+			children = (
+				A1000020001800000000001C /* AccessibilityTextService.swift */,
+				A1000021001800000000001C /* FocusedElementDetector.swift */,
+			);
+			path = Accessibility;
+			sourceTree = "<group>";
+		};
+		A100000000180000000010BC /* Observation */ = {
+			isa = PBXGroup;
+			children = (
+				A1000030001800000000001C /* ScreenObserver.swift */,
+				A1000031001800000000001C /* ContextAnalyzer.swift */,
+				A1000032001800000000001C /* StuckDetector.swift */,
+			);
+			path = Observation;
+			sourceTree = "<group>";
+		};
+		A100000000180000000010BD /* Storage */ = {
+			isa = PBXGroup;
+			children = (
+				A1000040001800000000001C /* KeychainManager.swift */,
+			);
+			path = Storage;
+			sourceTree = "<group>";
+		};
+		A100000000180000000010BE /* Performance */ = {
+			isa = PBXGroup;
+			children = (
+				A1000041001800000000001C /* BatteryAwareService.swift */,
+			);
+			path = Performance;
+			sourceTree = "<group>";
+		};
+		A100000000180000000010BF /* ErrorHandling */ = {
+			isa = PBXGroup;
+			children = (
+				A1000042001800000000001C /* ErrorRecoveryService.swift */,
+			);
+			path = ErrorHandling;
+			sourceTree = "<group>";
+		};
+		A1000000001800000000100C /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A1000002001800000000001C /* WritingSession.swift */,
+				A1000003001800000000001C /* DraftSuggestion.swift */,
+				A1000004001800000000001C /* Argument.swift */,
+				A1000005001800000000001C /* Matter.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A1000000001800000000100D /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A1000050001800000000001C /* DraftingCoordinator.swift */,
+				A1000051001800000000001C /* DraftingAssistant.swift */,
+				A1000052001800000000001C /* ArgumentLibrary.swift */,
+				A1000053001800000000001C /* MatterTracker.swift */,
+				A1000054001800000000001C /* LearningService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A1000000001800000000100E /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A100000000180000000010EA /* Sidebar */,
+				A100000000180000000010EB /* Settings */,
+				A100000000180000000010EC /* Onboarding */,
+				A100000000180000000010ED /* ArgumentLibrary */,
+				A100000000180000000010EE /* MainWindow */,
+				A100000000180000000010EF /* MorningBriefing */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		A100000000180000000010EA /* Sidebar */ = {
+			isa = PBXGroup;
+			children = (
+				A1000060001800000000001C /* GenevieveSidebarController.swift */,
+				A1000061001800000000001C /* SuggestionPanelView.swift */,
+				A1000062001800000000001C /* SuggestionCardView.swift */,
+			);
+			path = Sidebar;
+			sourceTree = "<group>";
+		};
+		A100000000180000000010EB /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				A1000070001800000000001C /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		A100000000180000000010EC /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				A1000080001800000000001C /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		A100000000180000000010ED /* ArgumentLibrary */ = {
+			isa = PBXGroup;
+			children = (
+				A1000090001800000000001C /* ArgumentLibraryView.swift */,
+			);
+			path = ArgumentLibrary;
+			sourceTree = "<group>";
+		};
+		A100000000180000000010EE /* MainWindow */ = {
+			isa = PBXGroup;
+			children = (
+				A1000091001800000000001C /* MainWindowView.swift */,
+			);
+			path = MainWindow;
+			sourceTree = "<group>";
+		};
+		A100000000180000000010EF /* MorningBriefing */ = {
+			isa = PBXGroup;
+			children = (
+				A1000092001800000000001C /* MorningBriefingView.swift */,
+			);
+			path = MorningBriefing;
+			sourceTree = "<group>";
+		};
+		A1000000001800000000100F /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A10000A0001800000000001C /* Assets.xcassets */,
+				A10000A1001800000000001C /* DesignSystem.swift */,
+				A10000A2001800000000001C /* Info.plist */,
+				A10000A3001800000000001C /* Genevieve.entitlements */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A1000000001800000000001A /* Genevieve */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1000000001800000000001B /* Build configuration list for PBXNativeTarget "Genevieve" */;
+			buildPhases = (
+				A1000000001800000000000H /* Sources */,
+				A1000000001800000000000B /* Frameworks */,
+				A1000000001800000000000I /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Genevieve;
+			productName = Genevieve;
+			productReference = A1000000001800000000000A /* Genevieve.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A1000000001800000000000G /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					A1000000001800000000001A = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = A1000000001800000000002A /* Build configuration list for PBXProject "Genevieve" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A1000000001800000000000C /* Root */;
+			productRefGroup = A1000000001800000000000F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A1000000001800000000001A /* Genevieve */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A1000000001800000000000I /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000A0001800000000001D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A1000000001800000000000H /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				/* App */
+				A1000001001800000000001D /* GenevieveApp.swift in Sources */,
+
+				/* Models */
+				A1000002001800000000001D /* WritingSession.swift in Sources */,
+				A1000003001800000000001D /* DraftSuggestion.swift in Sources */,
+				A1000004001800000000001D /* Argument.swift in Sources */,
+				A1000005001800000000001D /* Matter.swift in Sources */,
+
+				/* Core/AI */
+				A1000010001800000000001D /* AIProvider.swift in Sources */,
+				A1000011001800000000001D /* ClaudeProvider.swift in Sources */,
+				A1000012001800000000001D /* GeminiProvider.swift in Sources */,
+				A1000013001800000000001D /* OpenAIProvider.swift in Sources */,
+				A1000014001800000000001D /* AIProviderService.swift in Sources */,
+				A1000015001800000000001D /* PromptTemplates.swift in Sources */,
+
+				/* Core/Accessibility */
+				A1000020001800000000001D /* AccessibilityTextService.swift in Sources */,
+				A1000021001800000000001D /* FocusedElementDetector.swift in Sources */,
+
+				/* Core/Observation */
+				A1000030001800000000001D /* ScreenObserver.swift in Sources */,
+				A1000031001800000000001D /* ContextAnalyzer.swift in Sources */,
+				A1000032001800000000001D /* StuckDetector.swift in Sources */,
+
+				/* Core/Storage */
+				A1000040001800000000001D /* KeychainManager.swift in Sources */,
+
+				/* Core/Performance */
+				A1000041001800000000001D /* BatteryAwareService.swift in Sources */,
+
+				/* Core/ErrorHandling */
+				A1000042001800000000001D /* ErrorRecoveryService.swift in Sources */,
+
+				/* Services */
+				A1000050001800000000001D /* DraftingCoordinator.swift in Sources */,
+				A1000051001800000000001D /* DraftingAssistant.swift in Sources */,
+				A1000052001800000000001D /* ArgumentLibrary.swift in Sources */,
+				A1000053001800000000001D /* MatterTracker.swift in Sources */,
+				A1000054001800000000001D /* LearningService.swift in Sources */,
+
+				/* Views/Sidebar */
+				A1000060001800000000001D /* GenevieveSidebarController.swift in Sources */,
+				A1000061001800000000001D /* SuggestionPanelView.swift in Sources */,
+				A1000062001800000000001D /* SuggestionCardView.swift in Sources */,
+
+				/* Views/Settings */
+				A1000070001800000000001D /* SettingsView.swift in Sources */,
+
+				/* Views/Onboarding */
+				A1000080001800000000001D /* OnboardingView.swift in Sources */,
+
+				/* Views/ArgumentLibrary */
+				A1000090001800000000001D /* ArgumentLibraryView.swift in Sources */,
+
+				/* Views/MainWindow */
+				A1000091001800000000001D /* MainWindowView.swift in Sources */,
+
+				/* Views/MorningBriefing */
+				A1000092001800000000001D /* MorningBriefingView.swift in Sources */,
+
+				/* Resources */
+				A10000A1001800000000001D /* DesignSystem.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A1000000001800000000003A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A1000000001800000000003B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		A1000000001800000000004A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Genevieve/Resources/Genevieve.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Genevieve/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Genevieve;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.genevieve.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A1000000001800000000004B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Genevieve/Resources/Genevieve.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Genevieve/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Genevieve;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.genevieve.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A1000000001800000000002A /* Build configuration list for PBXProject "Genevieve" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1000000001800000000003A /* Debug */,
+				A1000000001800000000003B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1000000001800000000001B /* Build configuration list for PBXNativeTarget "Genevieve" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1000000001800000000004A /* Debug */,
+				A1000000001800000000004B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+	};
+	rootObject = A1000000001800000000000G /* Project object */;
+}
