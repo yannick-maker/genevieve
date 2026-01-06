@@ -20,7 +20,7 @@ final class GeminiProvider: AIProvider, ObservableObject {
 
     // MARK: - Initialization
 
-    nonisolated init(keychainManager: KeychainManager = .shared) {
+    init(keychainManager: KeychainManager = .shared) {
         self.keychainManager = keychainManager
 
         let config = URLSessionConfiguration.default

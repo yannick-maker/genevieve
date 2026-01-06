@@ -113,10 +113,14 @@ final class FocusedElementDetector: ObservableObject {
     private let updateInterval: TimeInterval = 0.5
     private let inactivityThreshold: TimeInterval = 30 // seconds before considered inactive
 
+    // MARK: - Singleton
+
+    static let shared = FocusedElementDetector()
+
     // MARK: - Initialization
 
-    init(textService: AccessibilityTextService = .shared) {
-        self.textService = textService
+    init(textService: AccessibilityTextService? = nil) {
+        self.textService = textService ?? AccessibilityTextService.shared
         setupBindings()
     }
 

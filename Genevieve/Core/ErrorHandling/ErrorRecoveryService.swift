@@ -193,7 +193,7 @@ final class ErrorRecoveryService: ObservableObject {
         showErrorAlert = true
 
         // Add to history
-        var record = ErrorRecord(error: error)
+        let record = ErrorRecord(error: error)
         errorHistory.insert(record, at: 0)
 
         // Trim history

@@ -184,7 +184,8 @@ enum AIProviderError: LocalizedError {
 
 // MARK: - Provider Protocol
 
-protocol AIProvider: AnyObject, Sendable {
+@MainActor
+protocol AIProvider: AnyObject {
     var providerType: AIProviderType { get }
     var isConfigured: Bool { get }
     var availableModels: [AIModel] { get }
@@ -196,6 +197,7 @@ protocol AIProvider: AnyObject, Sendable {
 
 // MARK: - Streaming Provider Protocol
 
+@MainActor
 protocol StreamingAIProvider: AIProvider {
     func generateStream(
         request: AIRequest,

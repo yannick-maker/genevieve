@@ -4,6 +4,7 @@ import SwiftUI
 struct SuggestionCardView: View {
     let suggestion: DraftingAssistant.DraftSuggestionData
     let isSelected: Bool
+    var isCompact: Bool = false
     let onAccept: () -> Void
     let onReject: () -> Void
     let onCopy: () -> Void
@@ -13,47 +14,53 @@ struct SuggestionCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Confidence badge and improvements
+            // Header (Badges)
             headerView
 
-            // Suggested text
-            textView
+            // Content
+            if isCompact {
+                // In compact mode, just show the suggested text nicely
+                Text(suggestion.suggestedText)
+                    .font(DesignSystem.Fonts.body)
+                    .foregroundStyle(DesignSystem.Colors.textPrimary)
+                    .lineLimit(3)
+            } else {
+                // Full mode with comparison
+                textView
+                
+                // Explanation
+                explanationView
+            }
 
-            // Explanation (collapsible)
-            explanationView
-
-            // Action buttons
-            if isSelected || isHovering {
+            // Action buttons (Only show on hover or selection)
+            if isHovering || isSelected {
                 actionButtonsView
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         }
-        .padding(12)
-        .background(cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(
-                    isSelected ? Color.accentColor : Color.clear,
-                    lineWidth: 2
-                )
+        .padding(DesignSystem.Metrics.padding)
+        .background(
+            RoundedRectangle(cornerRadius: DesignSystem.Metrics.cornerRadius)
+                .fill(isSelected ? AnyShapeStyle(DesignSystem.Colors.accent.opacity(0.05)) : AnyShapeStyle(DesignSystem.Colors.surface))
         )
-        .shadow(color: .black.opacity(isSelected ? 0.1 : 0.05), radius: isSelected ? 4 : 2)
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignSystem.Metrics.cornerRadius)
+                .stroke(isSelected ? DesignSystem.Colors.accent : Color.clear, lineWidth: 2)
+        )
+        .shadow(color: Color.black.opacity(isHovering ? 0.1 : 0.05), radius: 4, x: 0, y: 2)
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.15)) {
                 isHovering = hovering
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: isSelected)
     }
 
     // MARK: - Header
 
     private var headerView: some View {
         HStack(spacing: 8) {
-            // Confidence indicator
             ConfidenceBadge(level: suggestion.confidenceLevel)
 
-            // Improvement tags
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 4) {
                     ForEach(suggestion.improvementAreas, id: \.rawValue) { area in
@@ -63,11 +70,6 @@ struct SuggestionCardView: View {
             }
 
             Spacer()
-
-            // Timestamp
-            Text(timeAgo(suggestion.generatedAt))
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
         }
     }
 
@@ -75,22 +77,29 @@ struct SuggestionCardView: View {
 
     private var textView: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Original (strikethrough, dimmed)
+            // Original Text
             if isSelected {
                 Text(suggestion.originalText)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .strikethrough(color: .secondary.opacity(0.5))
+                    .font(DesignSystem.Fonts.caption)
+                    .foregroundStyle(DesignSystem.Colors.textTertiary)
+                    .strikethrough(color: DesignSystem.Colors.textTertiary.opacity(0.5))
                     .lineLimit(2)
             }
 
-            // Suggested text
-            Text(suggestion.suggestedText)
-                .font(.subheadline)
-                .foregroundStyle(.primary)
-                .lineLimit(isSelected ? nil : 4)
-                .fixedSize(horizontal: false, vertical: true)
+            // Suggested Text
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "arrow.right")
+                    .font(.caption)
+                    .foregroundStyle(DesignSystem.Colors.success)
+                    .padding(.top, 4)
+                
+                Text(suggestion.suggestedText)
+                    .font(DesignSystem.Fonts.body)
+                    .foregroundStyle(DesignSystem.Colors.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
+        .padding(.vertical, 4)
     }
 
     // MARK: - Explanation
@@ -98,223 +107,95 @@ struct SuggestionCardView: View {
     private var explanationView: some View {
         VStack(alignment: .leading, spacing: 4) {
             Button(action: { showingFullExplanation.toggle() }) {
-                HStack(spacing: 4) {
-                    Image(systemName: "lightbulb.fill")
+                HStack(spacing: 6) {
+                    Image(systemName: "info.circle")
                         .font(.caption)
-                        .foregroundStyle(.orange)
-
-                    Text(showingFullExplanation ? "Hide explanation" : "Why is this better?")
+                    
+                    Text(showingFullExplanation ? "Hide reasoning" : "View reasoning")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
-
+                    
                     Spacer()
-
-                    Image(systemName: showingFullExplanation ? "chevron.up" : "chevron.down")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
                 }
+                .foregroundStyle(DesignSystem.Colors.textSecondary)
             }
             .buttonStyle(.plain)
 
             if showingFullExplanation {
                 Text(suggestion.explanation)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(DesignSystem.Fonts.caption)
+                    .foregroundStyle(DesignSystem.Colors.textSecondary)
                     .padding(8)
-                    .background(Color.orange.opacity(0.05))
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    .background(DesignSystem.Colors.surfaceHighlight)
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Metrics.smallCornerRadius))
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: showingFullExplanation)
     }
 
     // MARK: - Action Buttons
 
     private var actionButtonsView: some View {
-        HStack(spacing: 8) {
-            // Accept button
+        HStack(spacing: 12) {
             Button(action: onAccept) {
-                HStack(spacing: 4) {
-                    Image(systemName: "checkmark")
-                    Text("Accept")
-                }
-                .font(.caption)
-                .fontWeight(.medium)
+                Label("Accept", systemImage: "checkmark")
             }
             .buttonStyle(.borderedProminent)
+            .tint(DesignSystem.Colors.success)
             .controlSize(.small)
 
-            // Copy button
-            Button(action: onCopy) {
-                HStack(spacing: 4) {
-                    Image(systemName: "doc.on.doc")
-                    Text("Copy")
-                }
-                .font(.caption)
+            Button(action: onReject) {
+                Label("Reject", systemImage: "xmark")
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
-
+            
             Spacer()
-
-            // Reject button
-            Button(action: onReject) {
-                Image(systemName: "xmark")
-                    .font(.caption)
+            
+            Button(action: onCopy) {
+                Image(systemName: "doc.on.doc")
             }
             .buttonStyle(.plain)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(DesignSystem.Colors.textSecondary)
+            .help("Copy to clipboard")
         }
-        .transition(.opacity.combined(with: .move(edge: .bottom)))
-    }
-
-    // MARK: - Background
-
-    private var cardBackground: some View {
-        Group {
-            if isSelected {
-                Color.accentColor.opacity(0.05)
-            } else if isHovering {
-                Color.secondary.opacity(0.05)
-            } else {
-                Color(nsColor: .controlBackgroundColor)
-            }
-        }
-    }
-
-    // MARK: - Helpers
-
-    private func timeAgo(_ date: Date) -> String {
-        let interval = Date().timeIntervalSince(date)
-
-        if interval < 60 {
-            return "just now"
-        } else if interval < 3600 {
-            let minutes = Int(interval / 60)
-            return "\(minutes)m ago"
-        } else {
-            let hours = Int(interval / 3600)
-            return "\(hours)h ago"
-        }
+        .padding(.top, 4)
     }
 }
 
-// MARK: - Confidence Badge
+// MARK: - Badges
 
 struct ConfidenceBadge: View {
     let level: DraftingAssistant.DraftSuggestionData.ConfidenceLevel
 
     var body: some View {
-        HStack(spacing: 4) {
-            Circle()
-                .fill(badgeColor)
-                .frame(width: 6, height: 6)
-
-            Text(badgeText)
-                .font(.caption2)
-                .fontWeight(.medium)
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(badgeColor.opacity(0.1))
-        .clipShape(Capsule())
+        Circle()
+            .fill(color)
+            .frame(width: 8, height: 8)
+            .help("Confidence: \(String(describing: level))")
     }
 
-    private var badgeColor: Color {
+    private var color: Color {
         switch level {
-        case .high:
-            return .green
-        case .medium:
-            return .orange
-        case .low:
-            return .gray
-        }
-    }
-
-    private var badgeText: String {
-        switch level {
-        case .high:
-            return "High confidence"
-        case .medium:
-            return "Moderate"
-        case .low:
-            return "Suggestion"
+        case .high: return DesignSystem.Colors.success
+        case .medium: return DesignSystem.Colors.warning
+        case .low: return DesignSystem.Colors.textTertiary
         }
     }
 }
-
-// MARK: - Improvement Tag
 
 struct ImprovementTag: View {
     let area: DraftingAssistant.DraftSuggestionData.ImprovementArea
 
     var body: some View {
         Text(area.rawValue)
-            .font(.caption2)
-            .foregroundStyle(tagColor)
+            .font(.system(size: 10, weight: .medium))
+            .foregroundStyle(DesignSystem.Colors.textSecondary)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(tagColor.opacity(0.1))
+            .background(DesignSystem.Colors.surfaceHighlight)
             .clipShape(Capsule())
+            .overlay(
+                Capsule().stroke(Color.primary.opacity(0.1), lineWidth: 0.5)
+            )
     }
-
-    private var tagColor: Color {
-        switch area {
-        case .clarity:
-            return .blue
-        case .precision:
-            return .purple
-        case .persuasiveness:
-            return .orange
-        case .conciseness:
-            return .green
-        case .formality:
-            return .indigo
-        case .flow:
-            return .cyan
-        case .legalStandard:
-            return .red
-        }
-    }
-}
-
-// MARK: - Preview
-
-#Preview {
-    VStack(spacing: 16) {
-        SuggestionCardView(
-            suggestion: DraftingAssistant.DraftSuggestionData(
-                id: UUID(),
-                originalText: "The defendant failed to comply with the requirements.",
-                suggestedText: "Defendant materially breached Section 4.2 by failing to deliver conforming goods within the contractually mandated timeframe.",
-                explanation: "This is stronger because it: (1) specifies the exact contractual provision, (2) uses the legal term 'materially breached', and (3) identifies the specific failure.",
-                improvementAreas: [.precision, .legalStandard, .persuasiveness],
-                confidence: 0.85,
-                generatedAt: Date()
-            ),
-            isSelected: true,
-            onAccept: {},
-            onReject: {},
-            onCopy: {}
-        )
-
-        SuggestionCardView(
-            suggestion: DraftingAssistant.DraftSuggestionData(
-                id: UUID(),
-                originalText: "We think the court should rule in our favor.",
-                suggestedText: "For the foregoing reasons, the Court should grant Plaintiff's motion for summary judgment.",
-                explanation: "More formal and uses proper legal convention for conclusion sections.",
-                improvementAreas: [.formality, .clarity],
-                confidence: 0.72,
-                generatedAt: Date().addingTimeInterval(-300)
-            ),
-            isSelected: false,
-            onAccept: {},
-            onReject: {},
-            onCopy: {}
-        )
-    }
-    .padding()
-    .frame(width: 300)
 }

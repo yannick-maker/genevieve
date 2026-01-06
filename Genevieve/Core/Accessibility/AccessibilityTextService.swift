@@ -135,28 +135,30 @@ final class AccessibilityTextService: ObservableObject {
     /// Get the currently focused UI element
     private func getFocusedElement() -> AXUIElement? {
         let systemWide = AXUIElementCreateSystemWide()
-        var focusedApp: CFTypeRef?
+        var focusedAppRef: CFTypeRef?
 
         guard AXUIElementCopyAttributeValue(
             systemWide,
             kAXFocusedApplicationAttribute as CFString,
-            &focusedApp
+            &focusedAppRef
         ) == .success else {
             return nil
         }
 
-        let appElement = focusedApp as! AXUIElement
-        var focusedElement: CFTypeRef?
+        guard let appRef = focusedAppRef else { return nil }
+        let appElement = (appRef as! AXUIElement)  // CFTypeRef to AXUIElement
+        var focusedElementRef: CFTypeRef?
 
         guard AXUIElementCopyAttributeValue(
             appElement,
             kAXFocusedUIElementAttribute as CFString,
-            &focusedElement
+            &focusedElementRef
         ) == .success else {
             return nil
         }
 
-        return focusedElement as! AXUIElement
+        guard let elementRef = focusedElementRef else { return nil }
+        return (elementRef as! AXUIElement)  // CFTypeRef to AXUIElement
     }
 
     /// Get detailed info about the focused element
@@ -207,19 +209,21 @@ final class AccessibilityTextService: ObservableObject {
 
     private func getWindowTitle(for app: NSRunningApplication) -> String? {
         let appElement = AXUIElementCreateApplication(app.processIdentifier)
-        var focusedWindow: CFTypeRef?
+        var focusedWindowRef: CFTypeRef?
 
         guard AXUIElementCopyAttributeValue(
             appElement,
             kAXFocusedWindowAttribute as CFString,
-            &focusedWindow
+            &focusedWindowRef
         ) == .success else {
             return nil
         }
 
+        guard let windowRef = focusedWindowRef else { return nil }
+        let windowElement = (windowRef as! AXUIElement)  // CFTypeRef to AXUIElement
         var titleRef: CFTypeRef?
         AXUIElementCopyAttributeValue(
-            focusedWindow as! AXUIElement,
+            windowElement,
             kAXTitleAttribute as CFString,
             &titleRef
         )
@@ -231,7 +235,8 @@ final class AccessibilityTextService: ObservableObject {
         guard let axValue = ref else { return nil }
         var range = CFRange()
 
-        guard AXValueGetValue(axValue as! AXValue, .cfRange, &range) else {
+        let value = (axValue as! AXValue)  // CFTypeRef to AXValue
+        guard AXValueGetValue(value, .cfRange, &range) else {
             return nil
         }
 
