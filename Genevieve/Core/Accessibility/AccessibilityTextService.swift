@@ -61,12 +61,19 @@ final class AccessibilityTextService: ObservableObject {
     // MARK: - Private Properties
 
     private var pollTimer: Timer?
+    private var permissionCheckTimer: Timer?
     private let pollInterval: TimeInterval = 0.5
+    private let permissionCheckInterval: TimeInterval = 2.0
 
     // MARK: - Initialization
 
     private init() {
         checkPermission()
+        startPermissionPolling()
+    }
+
+    deinit {
+        permissionCheckTimer?.invalidate()
     }
 
     // MARK: - Permission Handling
@@ -85,6 +92,9 @@ final class AccessibilityTextService: ObservableObject {
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
         _ = AXIsProcessTrustedWithOptions(options)
 
+        // Open System Settings directly
+        openAccessibilitySettings()
+
         // Check again after a delay
         Task {
             try? await Task.sleep(for: .seconds(1))
@@ -97,6 +107,21 @@ final class AccessibilityTextService: ObservableObject {
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
             NSWorkspace.shared.open(url)
         }
+    }
+
+    /// Start polling for permission changes (useful when user grants access in System Settings)
+    private func startPermissionPolling() {
+        permissionCheckTimer = Timer.scheduledTimer(withTimeInterval: permissionCheckInterval, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.checkPermission()
+            }
+        }
+    }
+
+    /// Stop permission polling (call after permission is granted)
+    func stopPermissionPolling() {
+        permissionCheckTimer?.invalidate()
+        permissionCheckTimer = nil
     }
 
     // MARK: - Polling
