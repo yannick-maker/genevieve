@@ -41,6 +41,9 @@ final class WritingSession {
     @Relationship(inverse: \Matter.sessions)
     var matter: Matter?
 
+    @Relationship(deleteRule: .cascade)
+    var commentaryEntries: [CommentaryEntry]?
+
     // MARK: - Initialization
 
     init(

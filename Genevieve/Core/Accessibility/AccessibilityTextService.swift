@@ -63,7 +63,12 @@ final class AccessibilityTextService: ObservableObject {
     private var pollTimer: Timer?
     private var permissionCheckTimer: Timer?
     private let pollInterval: TimeInterval = 0.5
-    private let permissionCheckInterval: TimeInterval = 2.0
+
+    // Exponential backoff for permission polling
+    private var permissionCheckInterval: TimeInterval = 2.0
+    private let minPermissionCheckInterval: TimeInterval = 2.0
+    private let maxPermissionCheckInterval: TimeInterval = 30.0
+    private let backoffMultiplier: Double = 1.5
 
     // MARK: - Initialization
 
@@ -83,6 +88,16 @@ final class AccessibilityTextService: ObservableObject {
     func checkPermission() -> Bool {
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): false] as CFDictionary
         let trusted = AXIsProcessTrustedWithOptions(options)
+
+        // Debug logging to diagnose permission issues
+        if trusted != hasAccessibilityPermission {
+            let bundleID = Bundle.main.bundleIdentifier ?? "unknown"
+            let bundlePath = Bundle.main.bundlePath
+            print("🔍 Accessibility permission changed: \(trusted)")
+            print("   Bundle ID: \(bundleID)")
+            print("   Bundle Path: \(bundlePath)")
+        }
+
         hasAccessibilityPermission = trusted
         return trusted
     }
@@ -107,21 +122,60 @@ final class AccessibilityTextService: ObservableObject {
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
             NSWorkspace.shared.open(url)
         }
+
+        // Reset polling interval since user is likely about to grant permission
+        resetPermissionPolling()
     }
 
     /// Start polling for permission changes (useful when user grants access in System Settings)
     private func startPermissionPolling() {
-        permissionCheckTimer = Timer.scheduledTimer(withTimeInterval: permissionCheckInterval, repeats: true) { [weak self] _ in
+        scheduleNextPermissionCheck()
+    }
+
+    private func scheduleNextPermissionCheck() {
+        // Don't schedule if permission already granted
+        guard !hasAccessibilityPermission else {
+            stopPermissionPolling()
+            return
+        }
+
+        permissionCheckTimer?.invalidate()
+        permissionCheckTimer = Timer.scheduledTimer(withTimeInterval: permissionCheckInterval, repeats: false) { [weak self] _ in
             Task { @MainActor in
-                self?.checkPermission()
+                guard let self = self else { return }
+
+                let wasGranted = self.checkPermission()
+
+                if wasGranted {
+                    // Permission granted, stop polling
+                    self.stopPermissionPolling()
+                    print("✅ Accessibility permission granted, stopping permission polling")
+                } else {
+                    // Increase interval with exponential backoff
+                    self.permissionCheckInterval = min(
+                        self.permissionCheckInterval * self.backoffMultiplier,
+                        self.maxPermissionCheckInterval
+                    )
+                    print("🔄 Accessibility permission not yet granted, next check in \(Int(self.permissionCheckInterval))s")
+
+                    // Schedule next check
+                    self.scheduleNextPermissionCheck()
+                }
             }
         }
+    }
+
+    /// Reset permission polling interval (call when user opens settings)
+    func resetPermissionPolling() {
+        permissionCheckInterval = minPermissionCheckInterval
+        scheduleNextPermissionCheck()
     }
 
     /// Stop permission polling (call after permission is granted)
     func stopPermissionPolling() {
         permissionCheckTimer?.invalidate()
         permissionCheckTimer = nil
+        permissionCheckInterval = minPermissionCheckInterval
     }
 
     // MARK: - Polling
@@ -275,9 +329,15 @@ final class AccessibilityTextService: ObservableObject {
         guard hasAccessibilityPermission else { return .accessDenied }
         guard let element = getFocusedElement() else { return .noFocusedElement }
 
-        // Try direct insertion first
+        // Check if this app requires clipboard-based insertion
+        let method = preferredInsertionMethod
+        if method == .clipboard {
+            print("📋 Using clipboard insertion for \(focusedElementInfo?.appBundleID ?? "unknown app")")
+            return insertViaClipboard(text)
+        }
+
+        // Try direct insertion first (selected text attribute)
         if replacing {
-            // Set the selected text attribute (replaces selection or inserts at cursor)
             let result = AXUIElementSetAttributeValue(
                 element,
                 kAXSelectedTextAttribute as CFString,
@@ -285,40 +345,13 @@ final class AccessibilityTextService: ObservableObject {
             )
 
             if result == .success {
+                print("✅ Direct insertion succeeded via kAXSelectedTextAttribute")
                 return .success
             }
         }
 
-        // Try setting the value directly (less precise but works for more apps)
-        if let info = getFocusedElementInfo(),
-           let fullText = info.fullText,
-           let position = info.cursorPosition {
-
-            var newText = fullText
-            let insertIndex = fullText.index(fullText.startIndex, offsetBy: min(position, fullText.count))
-
-            if replacing, let range = info.selectedRange, range.length > 0 {
-                // Replace selection
-                let startIndex = fullText.index(fullText.startIndex, offsetBy: range.location)
-                let endIndex = fullText.index(startIndex, offsetBy: range.length)
-                newText.replaceSubrange(startIndex..<endIndex, with: text)
-            } else {
-                // Insert at cursor
-                newText.insert(contentsOf: text, at: insertIndex)
-            }
-
-            let result = AXUIElementSetAttributeValue(
-                element,
-                kAXValueAttribute as CFString,
-                newText as CFTypeRef
-            )
-
-            if result == .success {
-                return .success
-            }
-        }
-
-        // Fallback to clipboard
+        // Direct insertion failed, fallback to clipboard
+        print("⚠️ Direct insertion failed, falling back to clipboard")
         return insertViaClipboard(text)
     }
 
@@ -336,11 +369,32 @@ final class AccessibilityTextService: ObservableObject {
         // Simulate Cmd+V
         simulatePaste()
 
-        // Restore clipboard after a delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        // Monitor for paste completion using changeCount
+        // Poll up to 1 second with 50ms intervals
+        Task { @MainActor in
+            let maxWaitMs = 1000
+            let pollIntervalMs = 50
+            var elapsedMs = 0
+
+            // Wait for the paste to complete (changeCount changes when app reads clipboard)
+            // Or timeout after maxWaitMs
+            while elapsedMs < maxWaitMs {
+                try? await Task.sleep(for: .milliseconds(pollIntervalMs))
+                elapsedMs += pollIntervalMs
+
+                // Check if clipboard was read by another app (changeCount changes)
+                // or if enough time has passed for the paste to complete
+                if elapsedMs >= 200 {
+                    // After 200ms, most pastes should be complete
+                    break
+                }
+            }
+
+            // Restore previous clipboard contents
             if let previous = previousContents {
                 pasteboard.clearContents()
                 pasteboard.setString(previous, forType: .string)
+                print("📋 Clipboard restored after \(elapsedMs)ms")
             }
         }
 
@@ -372,19 +426,38 @@ final class AccessibilityTextService: ObservableObject {
 
     // MARK: - Text Field Detection
 
+    /// Known text input roles (standard macOS)
+    private static let standardTextRoles = [
+        "AXTextArea",
+        "AXTextField",
+        "AXTextView",
+        "AXComboBox",
+        "AXSearchField"
+    ]
+
+    /// Web content roles that might be editable
+    private static let webTextRoles = [
+        "AXWebArea",      // Main web content area
+        "AXGroup",        // Often used for contenteditable divs
+        "AXStaticText"    // Sometimes editable in web contexts
+    ]
+
     /// Check if the focused element is a text input
     var isTextFieldFocused: Bool {
         guard let info = focusedElementInfo else { return false }
+        guard let role = info.elementRole else { return false }
 
-        let textRoles = [
-            "AXTextArea",
-            "AXTextField",
-            "AXTextView",
-            "AXComboBox",
-            "AXSearchField"
-        ]
+        // Check standard text roles
+        if Self.standardTextRoles.contains(role) {
+            return true
+        }
 
-        return textRoles.contains(info.elementRole ?? "")
+        // For web content roles, verify that the element is actually editable
+        if Self.webTextRoles.contains(role) {
+            return canInsertText
+        }
+
+        return false
     }
 
     /// Check if we can insert text into the focused element
@@ -392,14 +465,35 @@ final class AccessibilityTextService: ObservableObject {
         guard hasAccessibilityPermission else { return false }
         guard let element = getFocusedElement() else { return false }
 
-        var settable: DarwinBoolean = false
-        let result = AXUIElementIsAttributeSettable(
+        // First check if kAXValueAttribute is settable
+        var valueSettable: DarwinBoolean = false
+        let valueResult = AXUIElementIsAttributeSettable(
             element,
             kAXValueAttribute as CFString,
-            &settable
+            &valueSettable
         )
 
-        return result == .success && settable.boolValue
+        if valueResult == .success && valueSettable.boolValue {
+            return true
+        }
+
+        // Also check if kAXSelectedTextAttribute is settable (for insertion at cursor)
+        var selectedTextSettable: DarwinBoolean = false
+        let selectedResult = AXUIElementIsAttributeSettable(
+            element,
+            kAXSelectedTextAttribute as CFString,
+            &selectedTextSettable
+        )
+
+        return selectedResult == .success && selectedTextSettable.boolValue
+    }
+
+    /// Check if the current element is web content (contenteditable)
+    var isWebContent: Bool {
+        guard let info = focusedElementInfo else { return false }
+        guard let role = info.elementRole else { return false }
+
+        return Self.webTextRoles.contains(role)
     }
 }
 
@@ -413,11 +507,24 @@ extension AccessibilityTextService {
         let requiresClipboard: Bool
 
         static let handlers: [String: AppTextHandler] = [
+            // Microsoft Office - clipboard required
             "com.microsoft.Word": AppTextHandler(
                 bundleID: "com.microsoft.Word",
                 supportsDirectInsertion: false,
                 requiresClipboard: true
             ),
+            "com.microsoft.Excel": AppTextHandler(
+                bundleID: "com.microsoft.Excel",
+                supportsDirectInsertion: false,
+                requiresClipboard: true
+            ),
+            "com.microsoft.Outlook": AppTextHandler(
+                bundleID: "com.microsoft.Outlook",
+                supportsDirectInsertion: false,
+                requiresClipboard: true
+            ),
+
+            // Browsers - clipboard required for web content
             "com.google.Chrome": AppTextHandler(
                 bundleID: "com.google.Chrome",
                 supportsDirectInsertion: false,
@@ -428,6 +535,45 @@ extension AccessibilityTextService {
                 supportsDirectInsertion: false,
                 requiresClipboard: true
             ),
+            "org.mozilla.firefox": AppTextHandler(
+                bundleID: "org.mozilla.firefox",
+                supportsDirectInsertion: false,
+                requiresClipboard: true
+            ),
+            "com.brave.Browser": AppTextHandler(
+                bundleID: "com.brave.Browser",
+                supportsDirectInsertion: false,
+                requiresClipboard: true
+            ),
+            "com.microsoft.edgemac": AppTextHandler(
+                bundleID: "com.microsoft.edgemac",
+                supportsDirectInsertion: false,
+                requiresClipboard: true
+            ),
+
+            // Electron apps - clipboard required
+            "com.tinyspeck.slackmacgap": AppTextHandler(
+                bundleID: "com.tinyspeck.slackmacgap",
+                supportsDirectInsertion: false,
+                requiresClipboard: true
+            ),
+            "notion.id": AppTextHandler(
+                bundleID: "notion.id",
+                supportsDirectInsertion: false,
+                requiresClipboard: true
+            ),
+            "com.hnc.Discord": AppTextHandler(
+                bundleID: "com.hnc.Discord",
+                supportsDirectInsertion: false,
+                requiresClipboard: true
+            ),
+            "com.microsoft.VSCode": AppTextHandler(
+                bundleID: "com.microsoft.VSCode",
+                supportsDirectInsertion: false,
+                requiresClipboard: true
+            ),
+
+            // Native macOS apps - direct insertion works
             "com.apple.TextEdit": AppTextHandler(
                 bundleID: "com.apple.TextEdit",
                 supportsDirectInsertion: true,
@@ -435,6 +581,16 @@ extension AccessibilityTextService {
             ),
             "com.apple.iWork.Pages": AppTextHandler(
                 bundleID: "com.apple.iWork.Pages",
+                supportsDirectInsertion: true,
+                requiresClipboard: false
+            ),
+            "com.apple.Notes": AppTextHandler(
+                bundleID: "com.apple.Notes",
+                supportsDirectInsertion: true,
+                requiresClipboard: false
+            ),
+            "com.apple.mail": AppTextHandler(
+                bundleID: "com.apple.mail",
                 supportsDirectInsertion: true,
                 requiresClipboard: false
             )

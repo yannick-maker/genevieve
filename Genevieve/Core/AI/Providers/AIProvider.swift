@@ -214,12 +214,15 @@ enum AITaskCategory {
     case stuckAssistance        // Help when user appears stuck
     case quickEdit              // Simple edits, formatting
     case documentClassification // Identify document type
+    case commentary             // Stream-of-consciousness commentary
 
     var recommendedTier: QualityTier {
         switch self {
         case .draftSuggestion, .argumentRefinement, .stuckAssistance:
             return .smart
         case .contextAnalysis:
+            return .smart
+        case .commentary:
             return .smart
         case .quickEdit, .documentClassification:
             return .fast
@@ -230,6 +233,8 @@ enum AITaskCategory {
         switch self {
         case .contextAnalysis:
             return true
+        case .commentary:
+            return false
         default:
             return false
         }
@@ -247,6 +252,8 @@ enum AITaskCategory {
             return 0.7
         case .quickEdit:
             return 0.4
+        case .commentary:
+            return 0.9
         }
     }
 
@@ -264,6 +271,8 @@ enum AITaskCategory {
             return 500
         case .documentClassification:
             return 200
+        case .commentary:
+            return 500
         }
     }
 }

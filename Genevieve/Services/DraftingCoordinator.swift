@@ -33,6 +33,8 @@ final class DraftingCoordinator: ObservableObject {
     let stuckDetector: StuckDetector
     let draftingAssistant: DraftingAssistant
     let sidebarController: GenevieveSidebarController
+    let commentaryService: CommentaryService
+    let metricsCollector: WritingMetricsCollector
 
     // MARK: - Storage
 
@@ -44,6 +46,9 @@ final class DraftingCoordinator: ObservableObject {
     private var analysisDebouncer: Task<Void, Never>?
     private let analysisDebounceInterval: TimeInterval = 1.0
     private var lastAnalyzedText: String?
+    private var lastWritingContextBeforeSwitch: FocusedElementDetector.WritingContext?
+    private var isInAppSwitch = false
+    private var appSwitchStartTime: Date?
 
     // MARK: - Initialization
 
@@ -59,6 +64,13 @@ final class DraftingCoordinator: ObservableObject {
         self.stuckDetector = StuckDetector()
         self.draftingAssistant = DraftingAssistant(aiService: aiService)
         self.sidebarController = GenevieveSidebarController()
+        self.commentaryService = CommentaryService(aiService: aiService, modelContext: modelContext)
+        self.metricsCollector = WritingMetricsCollector()
+
+        // Set model context for commentary persistence
+        if let context = modelContext {
+            commentaryService.setModelContext(context)
+        }
 
         setupBindings()
     }
@@ -77,17 +89,30 @@ final class DraftingCoordinator: ObservableObject {
             }
             .store(in: &cancellables)
 
-        // Observe writing state
+        // Observe writing state (only pause if not in app switch with commentary active)
         focusedElementDetector.$isWriting
             .removeDuplicates()
             .sink { [weak self] isWriting in
+                guard let self = self else { return }
                 if isWriting {
-                    self?.startSessionIfNeeded()
-                } else {
-                    self?.pauseSession()
+                    self.isInAppSwitch = false
+                    self.startSessionIfNeeded()
+                } else if !self.isInAppSwitch || !self.commentaryService.isEnabled {
+                    self.pauseSession()
                 }
             }
             .store(in: &cancellables)
+
+        // Handle app switching - preserve commentary context
+        screenObserver.onAppSwitch = { [weak self] change in
+            guard let self = self else { return }
+            self.handleAppSwitch(from: change.fromApp, to: change.toApp)
+        }
+
+        screenObserver.onReturnToWork = { [weak self] app in
+            guard let self = self else { return }
+            self.handleReturnToWork(app: app)
+        }
 
         // Observe stuck state
         stuckDetector.$isLikelyStuck
@@ -95,6 +120,44 @@ final class DraftingCoordinator: ObservableObject {
             .filter { $0 }
             .sink { [weak self] _ in
                 self?.handleStuckState()
+            }
+            .store(in: &cancellables)
+
+        // Observe commentary mode changes - sync with CommentaryService
+        draftingAssistant.$commentaryModeEnabled
+            .removeDuplicates()
+            .sink { [weak self] isEnabled in
+                guard let self = self else { return }
+                self.commentaryService.isEnabled = isEnabled
+
+                if isEnabled {
+                    self.metricsCollector.startCollecting()
+                    self.commentaryService.setCurrentSession(self.currentSession)
+                    self.commentaryService.setCurrentMatter(self.currentMatter)
+
+                    if let context = self.focusedElementDetector.currentContext {
+                        Task { @MainActor in
+                            await self.generateCommentaryWithService(for: context)
+                        }
+                    }
+                } else {
+                    self.metricsCollector.stopCollecting()
+                }
+            }
+            .store(in: &cancellables)
+
+        // Observe stuck state for commentary integration
+        stuckDetector.$isLikelyStuck
+            .combineLatest(stuckDetector.$currentSignals)
+            .sink { [weak self] (isStuck, signals) in
+                guard let self = self else { return }
+                if isStuck {
+                    // Determine dominant stuck type from signals
+                    let stuckType = self.determineDominantStuckType(signals)
+                    self.commentaryService.setStuckState(stuckType)
+                } else {
+                    self.commentaryService.setStuckState(nil)
+                }
             }
             .store(in: &cancellables)
 
@@ -107,6 +170,8 @@ final class DraftingCoordinator: ObservableObject {
             draftingAssistant: draftingAssistant,
             sidebarController: sidebarController,
             contextAnalyzer: contextAnalyzer,
+            commentaryService: commentaryService,
+            metricsCollector: metricsCollector,
             onAccept: { [weak self] suggestion in
                 self?.acceptSuggestion(suggestion)
             },
@@ -115,6 +180,9 @@ final class DraftingCoordinator: ObservableObject {
             },
             onCopy: { [weak self] suggestion in
                 self?.copySuggestion(suggestion)
+            },
+            onSendMessage: { [weak self] message in
+                await self?.sendUserMessage(message)
             }
         )
 
@@ -157,20 +225,24 @@ final class DraftingCoordinator: ObservableObject {
     // MARK: - Context Handling
 
     private func handleContextChange(_ context: FocusedElementDetector.WritingContext) {
+        // Update metrics collector if active
+        if let text = context.selectedText ?? context.surroundingText {
+            metricsCollector.recordTyping(currentLength: text.count)
+            stuckDetector.recordTyping(currentLength: text.count)
+            stuckDetector.recordTextContent(text)
+        }
+
+        // Use shorter debounce for commentary mode (more continuous feel)
+        let debounceInterval = commentaryService.isEnabled ? 0.5 : analysisDebounceInterval
+
         // Debounce analysis
         analysisDebouncer?.cancel()
 
         analysisDebouncer = Task {
-            try? await Task.sleep(for: .seconds(analysisDebounceInterval))
+            try? await Task.sleep(for: .seconds(debounceInterval))
             guard !Task.isCancelled else { return }
 
             await analyzeContext(context)
-        }
-
-        // Update stuck detector
-        if let text = context.selectedText ?? context.surroundingText {
-            stuckDetector.recordTyping(currentLength: text.count)
-            stuckDetector.recordTextContent(text)
         }
     }
 
@@ -185,6 +257,13 @@ final class DraftingCoordinator: ObservableObject {
 
         // Analyze document context
         _ = await contextAnalyzer.analyze(context: context)
+
+        // Commentary mode takes precedence over suggestions
+        if commentaryService.isEnabled {
+            await generateCommentaryWithService(for: context)
+            state = .observing
+            return
+        }
 
         // Check if we should generate suggestions
         if shouldGenerateSuggestions() {
@@ -222,19 +301,141 @@ final class DraftingCoordinator: ObservableObject {
             triggerReason: stuckDetector.isLikelyStuck ? .stuckDetected : .proactive
         )
 
-        _ = await draftingAssistant.generateSuggestions(for: generationContext)
+        // Show sidebar immediately so user sees streaming progress
+        showSidebar()
 
-        // Show sidebar if we have suggestions
-        if !draftingAssistant.currentSuggestions.isEmpty {
-            showSidebar()
+        // Use streaming generation for progressive updates
+        await draftingAssistant.generateSuggestionsStreaming(for: generationContext)
+
+        // Hide sidebar if generation completed with no suggestions
+        if draftingAssistant.currentSuggestions.isEmpty && !draftingAssistant.isStreaming {
+            hideSidebarAfterDelay()
         }
 
         state = .displaying
     }
 
+    private func generateCommentary(for context: FocusedElementDetector.WritingContext) async {
+        guard aiService.hasAnyProvider else { return }
+
+        state = .generating
+
+        let generationContext = DraftingAssistant.GenerationContext(
+            text: context.surroundingText ?? "",
+            selectedText: context.selectedText,
+            documentType: contextAnalyzer.currentAnalysis?.documentType ?? .unknown,
+            section: contextAnalyzer.currentAnalysis?.section ?? .unknown,
+            tone: contextAnalyzer.currentAnalysis?.tone ?? .neutral,
+            triggerReason: .proactive
+        )
+
+        showSidebar()
+        await draftingAssistant.generateCommentaryStreaming(for: generationContext)
+
+        state = .displaying
+    }
+
+    /// Generate commentary using the new CommentaryService (with persistence and dialogue support)
+    private func generateCommentaryWithService(for context: FocusedElementDetector.WritingContext) async {
+        guard aiService.hasAnyProvider else { return }
+
+        state = .generating
+        showSidebar()
+
+        // Update metrics
+        if let text = context.selectedText ?? context.surroundingText {
+            metricsCollector.recordTyping(currentLength: text.count)
+        }
+
+        await commentaryService.generateCommentary(
+            text: context.surroundingText ?? "",
+            selectedText: context.selectedText,
+            documentType: contextAnalyzer.currentAnalysis?.documentType.rawValue ?? "Unknown",
+            documentSection: contextAnalyzer.currentAnalysis?.section?.rawValue ?? "Unknown",
+            tone: contextAnalyzer.currentAnalysis?.tone.rawValue ?? "Neutral",
+            appName: context.appName,
+            windowTitle: context.windowTitle
+        )
+
+        state = .displaying
+    }
+
+    /// Determine the dominant stuck type from current signals
+    private func determineDominantStuckType(_ signals: StuckDetector.StuckSignals) -> String {
+        let signalValues = [
+            ("pause", signals.pauseSignal),
+            ("distraction", signals.distractionSignal),
+            ("rewriting", signals.rewritingSignal),
+            ("navigation", signals.navigationSignal)
+        ]
+
+        let dominant = signalValues.max(by: { $0.1 < $1.1 })
+        return dominant?.0 ?? "pause"
+    }
+
+    /// Send a user message to Genevieve (for dialogue)
+    func sendUserMessage(_ message: String) async {
+        let context = focusedElementDetector.currentContext?.surroundingText
+        await commentaryService.sendUserMessage(message, context: context)
+    }
+
+    // MARK: - App Switching
+
+    private func handleAppSwitch(from: ScreenObserver.AppInfo?, to: ScreenObserver.AppInfo) {
+        // Only track if commentary is active
+        guard commentaryService.isEnabled else { return }
+
+        // Save the current context before switching
+        if let context = focusedElementDetector.currentContext {
+            lastWritingContextBeforeSwitch = context
+        }
+
+        isInAppSwitch = true
+        appSwitchStartTime = Date()
+
+        // Record app switch in metrics
+        metricsCollector.recordAppSwitch(
+            appName: to.name,
+            duration: 0 // Duration unknown until return
+        )
+
+        // Don't cancel commentary - let it continue streaming if in progress
+        // The context is preserved in lastWritingContextBeforeSwitch
+    }
+
+    private func handleReturnToWork(app: ScreenObserver.AppInfo) {
+        guard commentaryService.isEnabled else { return }
+
+        // Calculate time spent away
+        let timeAway = appSwitchStartTime.map { Date().timeIntervalSince($0) } ?? 0
+
+        isInAppSwitch = false
+        appSwitchStartTime = nil
+
+        // Record the app switch duration
+        if timeAway > 0 {
+            metricsCollector.recordAppSwitch(appName: app.name, duration: timeAway)
+        }
+
+        // If we have saved context and user returns to writing, resume naturally
+        // The commentary will pick up from the next context change
+        // No need to force a new generation - just let the normal flow continue
+
+        // If user was away for a while (> 30 seconds), acknowledge their return
+        if timeAway > 30, let context = focusedElementDetector.currentContext ?? lastWritingContextBeforeSwitch {
+            Task { @MainActor in
+                // Trigger a gentle refresh of commentary to acknowledge the return
+                await self.generateCommentaryWithService(for: context)
+            }
+        }
+
+        lastWritingContextBeforeSwitch = nil
+    }
+
     // MARK: - Stuck Handling
 
     private func handleStuckState() {
+        guard !draftingAssistant.commentaryModeEnabled else { return }
         let (shouldTrigger, stuckType) = stuckDetector.shouldTriggerHelp()
 
         guard shouldTrigger else { return }
@@ -262,11 +463,16 @@ final class DraftingCoordinator: ObservableObject {
             triggerReason: .stuckDetected
         )
 
-        _ = await draftingAssistant.generateSuggestions(for: generationContext)
+        // Show sidebar immediately with bounce to get attention
+        showSidebar()
+        sidebarController.bounceForNewSuggestion()
 
-        if !draftingAssistant.currentSuggestions.isEmpty {
-            showSidebar()
-            sidebarController.bounceForNewSuggestion()
+        // Use streaming generation
+        await draftingAssistant.generateSuggestionsStreaming(for: generationContext)
+
+        // Hide sidebar if no suggestions after completion
+        if draftingAssistant.currentSuggestions.isEmpty && !draftingAssistant.isStreaming {
+            hideSidebarAfterDelay()
         }
     }
 
@@ -332,8 +538,13 @@ final class DraftingCoordinator: ObservableObject {
     }
 
     private func hideSidebarAfterDelay() {
+        // Don't auto-hide when commentary mode is active - sidebar should stay visible
+        guard !draftingAssistant.commentaryModeEnabled else { return }
+
         Task {
             try? await Task.sleep(for: .seconds(2))
+            // Double-check commentary mode hasn't been enabled during the delay
+            guard !draftingAssistant.commentaryModeEnabled else { return }
             if draftingAssistant.currentSuggestions.isEmpty {
                 hideSidebar()
             }

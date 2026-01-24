@@ -28,6 +28,11 @@ let package = Package(
                 .linkedFramework("SwiftUI"),
                 .linkedFramework("Combine")
             ]
+        ),
+        .testTarget(
+            name: "GenevieveTests",
+            dependencies: ["Genevieve"],
+            path: "GenevieveTests"
         )
     ]
 )

@@ -1,12 +1,16 @@
 import SwiftUI
 import SwiftData
+import Darwin
 
 struct MainWindowView: View {
     @EnvironmentObject var aiService: AIProviderService
+    @EnvironmentObject var coordinator: DraftingCoordinator
     @Environment(\.modelContext) private var modelContext
     @StateObject private var argumentLibrary = ArgumentLibrary()
     @State private var selectedTab: MainTab = .dashboard
     @State private var showingSidebar = true
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var hasAutoStarted = false
 
     var body: some View {
         NavigationSplitView {
@@ -80,6 +84,15 @@ struct MainWindowView: View {
                     }
                 }
             }
+        }
+        .task {
+            // Auto-start coordinator if ready
+            guard !hasAutoStarted else { return }
+            guard hasCompletedOnboarding else { return }
+            guard aiService.hasAnyProvider else { return }
+
+            hasAutoStarted = true
+            await coordinator.start()
         }
     }
 
@@ -302,8 +315,6 @@ struct DraftingView: View {
 
     var body: some View {
         VStack(spacing: 24) {
-            Spacer()
-
             Image(systemName: "wand.and.stars")
                 .font(.system(size: 64))
                 .foregroundStyle(DesignSystem.Colors.primaryGradient)
@@ -373,8 +384,9 @@ struct DraftingView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .tint(DesignSystem.Colors.accent)
+            }
 
-                // Permission warnings
+            if !coordinator.textService.hasAccessibilityPermission {
                 PermissionStatusView(textService: coordinator.textService)
                     .padding(.top, 16)
             }
@@ -405,36 +417,224 @@ struct DraftingView: View {
 
 struct PermissionStatusView: View {
     let textService: AccessibilityTextService
+    private var appBundleURL: URL? {
+        if let url = appBundleURL(from: Bundle.main.bundleURL) {
+            return url
+        }
+
+        if let executableURL = Bundle.main.executableURL,
+           let url = appBundleURL(from: executableURL) {
+            return url
+        }
+
+        if let runningURL = NSRunningApplication.current.bundleURL,
+           let url = appBundleURL(from: runningURL) {
+            return url
+        }
+
+        if let executablePath = resolvedExecutablePath {
+            let url = URL(fileURLWithPath: executablePath)
+            if let appURL = appBundleURL(from: url) {
+                return appURL
+            }
+        }
+
+        if let argumentPath = ProcessInfo.processInfo.arguments.first {
+            let url = URL(fileURLWithPath: argumentPath)
+            if let appURL = appBundleURL(from: url) {
+                return appURL
+            }
+        }
+
+        return nil
+    }
+
+    private var bundlePathText: String {
+        if let appURL = appBundleURL {
+            return appURL.path
+        }
+
+        let bundlePath = Bundle.main.bundlePath
+        if bundlePath != "/" {
+            return bundlePath
+        }
+
+        return Bundle.main.executableURL?.path
+            ?? resolvedExecutablePath
+            ?? ProcessInfo.processInfo.arguments.first
+            ?? "/"
+    }
+
+    private var bundlePathNote: String? {
+        guard appBundleURL == nil else { return nil }
+        return "Bundle path not resolved. If running from Xcode, use Product > Show Build Folder and add Genevieve.app from Build/Products/Debug."
+    }
+
+    private var productsFolderURL: URL? {
+        let candidates = [
+            appBundleURL,
+            Bundle.main.executableURL,
+            Bundle.main.bundleURL,
+            NSRunningApplication.current.bundleURL
+        ].compactMap { $0 }
+
+        for candidate in candidates {
+            if let url = productsFolderURL(from: candidate) {
+                return url
+            }
+        }
+
+        return nil
+    }
+
+    private var productsFolderPathText: String? {
+        productsFolderURL?.path
+    }
 
     var body: some View {
         VStack(spacing: 12) {
-            if !textService.hasAccessibilityPermission {
-                HStack(spacing: 12) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
+            let isGranted = textService.hasAccessibilityPermission
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Accessibility Permission Required")
-                            .font(DesignSystem.Fonts.headline)
-                        Text("Genevieve needs accessibility access to detect text fields and insert suggestions.")
+            HStack(spacing: 12) {
+                Image(systemName: isGranted ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
+                    .foregroundStyle(isGranted ? .green : .orange)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(isGranted ? "Accessibility Permission Granted" : "Accessibility Permission Required")
+                        .font(DesignSystem.Fonts.headline)
+                    Text(isGranted
+                         ? "Genevieve can detect text fields and insert suggestions."
+                         : "Genevieve needs accessibility access to detect text fields and insert suggestions.")
+                        .font(DesignSystem.Fonts.caption)
+                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("In System Settings > Privacy & Security > Accessibility, click + and select:")
                             .font(DesignSystem.Fonts.caption)
                             .foregroundStyle(DesignSystem.Colors.textSecondary)
+
+                        Text(bundlePathText)
+                            .font(.caption2)
+                            .foregroundStyle(DesignSystem.Colors.textTertiary)
+                            .textSelection(.enabled)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        if let note = bundlePathNote {
+                            Text(note)
+                                .font(.caption2)
+                                .foregroundStyle(DesignSystem.Colors.textTertiary)
+                        }
+
+                        HStack(spacing: 8) {
+                            Button("Copy") {
+                                copyBundlePath()
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.mini)
+
+                            Button("Show in Finder") {
+                                revealAppInFinder()
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.mini)
+                            .disabled(appBundleURL == nil && Bundle.main.executableURL == nil)
+
+                            Button("Open Build Folder") {
+                                revealBuildProducts()
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.mini)
+                            .disabled(productsFolderURL == nil)
+                        }
                     }
+                    .padding(.top, 6)
+                }
 
-                    Spacer()
+                Spacer()
 
-                    Button("Grant Access") {
+                Button("Open Settings") {
+                    if isGranted {
+                        textService.openAccessibilitySettings()
+                    } else {
                         textService.requestPermission()
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
                 }
-                .padding()
-                .background(Color.orange.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+
+                Button("Refresh") {
+                    _ = textService.checkPermission()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
             }
+            .padding()
+            .background(isGranted ? Color.green.opacity(0.08) : Color.orange.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
         .frame(maxWidth: 500)
+    }
+
+    private func copyBundlePath() {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(bundlePathText, forType: .string)
+    }
+
+    private func revealAppInFinder() {
+        if let appURL = appBundleURL {
+            NSWorkspace.shared.activateFileViewerSelecting([appURL])
+            return
+        }
+
+        if let executableURL = Bundle.main.executableURL {
+            NSWorkspace.shared.activateFileViewerSelecting([executableURL])
+        }
+    }
+
+    private func appBundleURL(from url: URL) -> URL? {
+        var current = url
+
+        if current.pathExtension == "app" {
+            return current
+        }
+
+        while current.pathExtension != "app" && current.pathComponents.count > 1 {
+            current.deleteLastPathComponent()
+        }
+
+        return current.pathExtension == "app" ? current : nil
+    }
+
+    private var resolvedExecutablePath: String? {
+        var size: UInt32 = 0
+        _ = _NSGetExecutablePath(nil, &size)
+        guard size > 0 else { return nil }
+
+        var buffer = [CChar](repeating: 0, count: Int(size))
+        let result = _NSGetExecutablePath(&buffer, &size)
+        guard result == 0 else { return nil }
+
+        return String(cString: buffer)
+    }
+
+    private func productsFolderURL(from url: URL) -> URL? {
+        let components = url.pathComponents
+        guard let productsIndex = components.lastIndex(of: "Products") else { return nil }
+        guard productsIndex + 1 < components.count else { return nil }
+
+        let configIndex = productsIndex + 1
+        let path = NSString.path(withComponents: Array(components.prefix(configIndex + 1)))
+        return URL(fileURLWithPath: path)
+    }
+
+    private func revealBuildProducts() {
+        if let productsURL = productsFolderURL {
+            NSWorkspace.shared.open(productsURL)
+        } else if let path = productsFolderPathText {
+            NSWorkspace.shared.open(URL(fileURLWithPath: path))
+        }
     }
 }
 

@@ -15,6 +15,8 @@
 		A1000003001800000000001D /* DraftSuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000003001800000000001C /* DraftSuggestion.swift */; };
 		A1000004001800000000001D /* Argument.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000004001800000000001C /* Argument.swift */; };
 		A1000005001800000000001D /* Matter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000005001800000000001C /* Matter.swift */; };
+		A1000006001800000000001D /* CommentaryEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000006001800000000001C /* CommentaryEntry.swift */; };
+		A1000007001800000000001D /* UserWritingProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000007001800000000001C /* UserWritingProfile.swift */; };
 
 		/* Core/AI */
 		A1000010001800000000001D /* AIProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000010001800000000001C /* AIProvider.swift */; };
@@ -48,11 +50,23 @@
 		A1000052001800000000001D /* ArgumentLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000052001800000000001C /* ArgumentLibrary.swift */; };
 		A1000053001800000000001D /* MatterTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000053001800000000001C /* MatterTracker.swift */; };
 		A1000054001800000000001D /* LearningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000054001800000000001C /* LearningService.swift */; };
+		A1000055001800000000001D /* CommentaryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000055001800000000001C /* CommentaryService.swift */; };
+		A1000056001800000000001D /* CommentaryExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000056001800000000001C /* CommentaryExporter.swift */; };
+		A1000057001800000000001D /* WritingMetricsCollector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000057001800000000001C /* WritingMetricsCollector.swift */; };
 
 		/* Views/Sidebar */
 		A1000060001800000000001D /* GenevieveSidebarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000060001800000000001C /* GenevieveSidebarController.swift */; };
 		A1000061001800000000001D /* SuggestionPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000061001800000000001C /* SuggestionPanelView.swift */; };
 		A1000062001800000000001D /* SuggestionCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000062001800000000001C /* SuggestionCardView.swift */; };
+		A1000063001800000000001D /* SuggestionHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000063001800000000001C /* SuggestionHistoryView.swift */; };
+		A1000064001800000000001D /* MatterContextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000064001800000000001C /* MatterContextView.swift */; };
+		A1000065001800000000001D /* CommentaryEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000065001800000000001C /* CommentaryEntryView.swift */; };
+
+		/* Views/Commentary */
+		A1000066001800000000001D /* CommentaryArchiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000066001800000000001C /* CommentaryArchiveView.swift */; };
+
+		/* Views/Analytics */
+		A1000067001800000000001D /* WritingAnalyticsDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000067001800000000001C /* WritingAnalyticsDashboard.swift */; };
 
 		/* Views/Settings */
 		A1000070001800000000001D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000070001800000000001C /* SettingsView.swift */; };
@@ -72,6 +86,7 @@
 		/* Resources */
 		A10000A0001800000000001D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10000A0001800000000001C /* Assets.xcassets */; };
 		A10000A1001800000000001D /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000A1001800000000001C /* DesignSystem.swift */; };
+		A10000A4001800000000001D /* LegalWritingPrinciples.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000A4001800000000001C /* LegalWritingPrinciples.swift */; };
 
 		/* Frameworks */
 		A10000B0001800000000001D /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000B0001800000000001C /* AppKit.framework */; };
@@ -94,6 +109,8 @@
 		A1000003001800000000001C /* DraftSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftSuggestion.swift; sourceTree = "<group>"; };
 		A1000004001800000000001C /* Argument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Argument.swift; sourceTree = "<group>"; };
 		A1000005001800000000001C /* Matter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Matter.swift; sourceTree = "<group>"; };
+		A1000006001800000000001C /* CommentaryEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentaryEntry.swift; sourceTree = "<group>"; };
+		A1000007001800000000001C /* UserWritingProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserWritingProfile.swift; sourceTree = "<group>"; };
 
 		/* Core/AI/Providers */
 		A1000010001800000000001C /* AIProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProvider.swift; sourceTree = "<group>"; };
@@ -127,11 +144,23 @@
 		A1000052001800000000001C /* ArgumentLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArgumentLibrary.swift; sourceTree = "<group>"; };
 		A1000053001800000000001C /* MatterTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatterTracker.swift; sourceTree = "<group>"; };
 		A1000054001800000000001C /* LearningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearningService.swift; sourceTree = "<group>"; };
+		A1000055001800000000001C /* CommentaryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentaryService.swift; sourceTree = "<group>"; };
+		A1000056001800000000001C /* CommentaryExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentaryExporter.swift; sourceTree = "<group>"; };
+		A1000057001800000000001C /* WritingMetricsCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WritingMetricsCollector.swift; sourceTree = "<group>"; };
 
 		/* Views/Sidebar */
 		A1000060001800000000001C /* GenevieveSidebarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenevieveSidebarController.swift; sourceTree = "<group>"; };
 		A1000061001800000000001C /* SuggestionPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionPanelView.swift; sourceTree = "<group>"; };
 		A1000062001800000000001C /* SuggestionCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionCardView.swift; sourceTree = "<group>"; };
+		A1000063001800000000001C /* SuggestionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionHistoryView.swift; sourceTree = "<group>"; };
+		A1000064001800000000001C /* MatterContextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatterContextView.swift; sourceTree = "<group>"; };
+		A1000065001800000000001C /* CommentaryEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentaryEntryView.swift; sourceTree = "<group>"; };
+
+		/* Views/Commentary */
+		A1000066001800000000001C /* CommentaryArchiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentaryArchiveView.swift; sourceTree = "<group>"; };
+
+		/* Views/Analytics */
+		A1000067001800000000001C /* WritingAnalyticsDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WritingAnalyticsDashboard.swift; sourceTree = "<group>"; };
 
 		/* Views/Settings */
 		A1000070001800000000001C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -153,6 +182,7 @@
 		A10000A1001800000000001C /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		A10000A2001800000000001C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A10000A3001800000000001C /* Genevieve.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Genevieve.entitlements; sourceTree = "<group>"; };
+		A10000A4001800000000001C /* LegalWritingPrinciples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalWritingPrinciples.swift; sourceTree = "<group>"; };
 
 		/* Frameworks */
 		A10000B0001800000000001C /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -315,6 +345,8 @@
 				A1000003001800000000001C /* DraftSuggestion.swift */,
 				A1000004001800000000001C /* Argument.swift */,
 				A1000005001800000000001C /* Matter.swift */,
+				A1000006001800000000001C /* CommentaryEntry.swift */,
+				A1000007001800000000001C /* UserWritingProfile.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -327,6 +359,9 @@
 				A1000052001800000000001C /* ArgumentLibrary.swift */,
 				A1000053001800000000001C /* MatterTracker.swift */,
 				A1000054001800000000001C /* LearningService.swift */,
+				A1000055001800000000001C /* CommentaryService.swift */,
+				A1000056001800000000001C /* CommentaryExporter.swift */,
+				A1000057001800000000001C /* WritingMetricsCollector.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -340,8 +375,26 @@
 				A100000000180000000010ED /* ArgumentLibrary */,
 				A100000000180000000010EE /* MainWindow */,
 				A100000000180000000010EF /* MorningBriefing */,
+				A100000000180000000010F0 /* Commentary */,
+				A100000000180000000010F1 /* Analytics */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		A100000000180000000010F0 /* Commentary */ = {
+			isa = PBXGroup;
+			children = (
+				A1000066001800000000001C /* CommentaryArchiveView.swift */,
+			);
+			path = Commentary;
+			sourceTree = "<group>";
+		};
+		A100000000180000000010F1 /* Analytics */ = {
+			isa = PBXGroup;
+			children = (
+				A1000067001800000000001C /* WritingAnalyticsDashboard.swift */,
+			);
+			path = Analytics;
 			sourceTree = "<group>";
 		};
 		A100000000180000000010EA /* Sidebar */ = {
@@ -350,6 +403,9 @@
 				A1000060001800000000001C /* GenevieveSidebarController.swift */,
 				A1000061001800000000001C /* SuggestionPanelView.swift */,
 				A1000062001800000000001C /* SuggestionCardView.swift */,
+				A1000063001800000000001C /* SuggestionHistoryView.swift */,
+				A1000064001800000000001C /* MatterContextView.swift */,
+				A1000065001800000000001C /* CommentaryEntryView.swift */,
 			);
 			path = Sidebar;
 			sourceTree = "<group>";
@@ -401,6 +457,7 @@
 				A10000A1001800000000001C /* DesignSystem.swift */,
 				A10000A2001800000000001C /* Info.plist */,
 				A10000A3001800000000001C /* Genevieve.entitlements */,
+				A10000A4001800000000001C /* LegalWritingPrinciples.swift */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -482,6 +539,8 @@
 				A1000003001800000000001D /* DraftSuggestion.swift in Sources */,
 				A1000004001800000000001D /* Argument.swift in Sources */,
 				A1000005001800000000001D /* Matter.swift in Sources */,
+				A1000006001800000000001D /* CommentaryEntry.swift in Sources */,
+				A1000007001800000000001D /* UserWritingProfile.swift in Sources */,
 
 				/* Core/AI */
 				A1000010001800000000001D /* AIProvider.swift in Sources */,
@@ -515,11 +574,23 @@
 				A1000052001800000000001D /* ArgumentLibrary.swift in Sources */,
 				A1000053001800000000001D /* MatterTracker.swift in Sources */,
 				A1000054001800000000001D /* LearningService.swift in Sources */,
+				A1000055001800000000001D /* CommentaryService.swift in Sources */,
+				A1000056001800000000001D /* CommentaryExporter.swift in Sources */,
+				A1000057001800000000001D /* WritingMetricsCollector.swift in Sources */,
 
 				/* Views/Sidebar */
 				A1000060001800000000001D /* GenevieveSidebarController.swift in Sources */,
 				A1000061001800000000001D /* SuggestionPanelView.swift in Sources */,
 				A1000062001800000000001D /* SuggestionCardView.swift in Sources */,
+				A1000063001800000000001D /* SuggestionHistoryView.swift in Sources */,
+				A1000064001800000000001D /* MatterContextView.swift in Sources */,
+				A1000065001800000000001D /* CommentaryEntryView.swift in Sources */,
+
+				/* Views/Commentary */
+				A1000066001800000000001D /* CommentaryArchiveView.swift in Sources */,
+
+				/* Views/Analytics */
+				A1000067001800000000001D /* WritingAnalyticsDashboard.swift in Sources */,
 
 				/* Views/Settings */
 				A1000070001800000000001D /* SettingsView.swift in Sources */,
@@ -538,6 +609,7 @@
 
 				/* Resources */
 				A10000A1001800000000001D /* DesignSystem.swift in Sources */,
+				A10000A4001800000000001D /* LegalWritingPrinciples.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

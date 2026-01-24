@@ -2,7 +2,7 @@ import Foundation
 
 /// Google Gemini API provider implementation
 @MainActor
-final class GeminiProvider: AIProvider, ObservableObject {
+final class GeminiProvider: AIProvider, StreamingAIProvider, ObservableObject {
     let providerType: AIProviderType = .gemini
 
     @Published private(set) var isConfigured = false
@@ -14,6 +14,7 @@ final class GeminiProvider: AIProvider, ObservableObject {
     // MARK: - Private Properties
 
     private let baseURLTemplate = "https://generativelanguage.googleapis.com/v1beta/models/%@:generateContent"
+    private let streamURLTemplate = "https://generativelanguage.googleapis.com/v1beta/models/%@:streamGenerateContent"
     private var apiKey: String?
     private let keychainManager: KeychainManager
     private let urlSession: URLSession
@@ -80,6 +81,136 @@ final class GeminiProvider: AIProvider, ObservableObject {
         }
 
         return try handleResponse(data: data, httpResponse: httpResponse, model: model)
+    }
+
+    func generateStream(
+        request: AIRequest,
+        model: AIModel
+    ) -> AsyncThrowingStream<String, Error> {
+        AsyncThrowingStream { continuation in
+            Task {
+                do {
+                    guard let apiKey = apiKey else {
+                        throw AIProviderError.notConfigured
+                    }
+
+                    let httpRequest = try buildStreamRequest(request: request, model: model, apiKey: apiKey)
+
+                    let (bytes, response) = try await urlSession.bytes(for: httpRequest)
+
+                    guard let httpResponse = response as? HTTPURLResponse else {
+                        throw AIProviderError.invalidResponse("Not an HTTP response")
+                    }
+
+                    guard httpResponse.statusCode == 200 else {
+                        throw AIProviderError.invalidResponse("HTTP \(httpResponse.statusCode)")
+                    }
+
+                    // Gemini streams JSON objects separated by newlines
+                    var buffer = ""
+                    for try await line in bytes.lines {
+                        buffer += line
+
+                        // Try to parse accumulated buffer as JSON
+                        if let data = buffer.data(using: .utf8) {
+                            // Gemini returns array of responses for streaming
+                            if let json = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
+                                for item in json {
+                                    if let text = extractTextFromStreamChunk(item) {
+                                        continuation.yield(text)
+                                    }
+                                }
+                                buffer = ""
+                            } else if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                                // Single object
+                                if let text = extractTextFromStreamChunk(json) {
+                                    continuation.yield(text)
+                                }
+                                buffer = ""
+                            }
+                        }
+                    }
+
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+        }
+    }
+
+    private func extractTextFromStreamChunk(_ json: [String: Any]) -> String? {
+        guard let candidates = json["candidates"] as? [[String: Any]],
+              let firstCandidate = candidates.first,
+              let content = firstCandidate["content"] as? [String: Any],
+              let parts = content["parts"] as? [[String: Any]] else {
+            return nil
+        }
+
+        // Find text parts (skip thinking parts if present)
+        for part in parts {
+            if let text = part["text"] as? String {
+                return text
+            }
+        }
+        return nil
+    }
+
+    private func buildStreamRequest(
+        request: AIRequest,
+        model: AIModel,
+        apiKey: String
+    ) throws -> URLRequest {
+        let modelName = model.rawValue
+        let urlString = String(format: streamURLTemplate, modelName) + "?key=\(apiKey)&alt=sse"
+
+        guard let url = URL(string: urlString) else {
+            throw AIProviderError.invalidResponse("Invalid URL")
+        }
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+
+        // Build parts array
+        var parts: [[String: Any]] = []
+
+        // Add images if present
+        if let images = request.images {
+            for imageData in images {
+                parts.append([
+                    "inline_data": [
+                        "mime_type": "image/jpeg",
+                        "data": imageData.base64EncodedString()
+                    ]
+                ])
+            }
+        }
+
+        // Add text prompt
+        parts.append(["text": request.prompt])
+
+        var requestBody: [String: Any] = [
+            "contents": [
+                ["parts": parts]
+            ],
+            "generationConfig": [
+                "temperature": request.temperature,
+                "maxOutputTokens": request.maxTokens
+            ]
+        ]
+
+        // Add system instruction if present
+        if let systemPrompt = request.systemPrompt {
+            requestBody["systemInstruction"] = [
+                "parts": [["text": systemPrompt]]
+            ]
+        }
+
+        urlRequest.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+
+        return urlRequest
     }
 
     // MARK: - Private Helpers

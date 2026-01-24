@@ -23,7 +23,9 @@ struct GenevieveApp: App {
                 WritingSession.self,
                 DraftSuggestion.self,
                 Matter.self,
-                Argument.self
+                Argument.self,
+                CommentaryEntry.self,
+                UserWritingProfile.self
             ])
             let modelConfiguration = ModelConfiguration(
                 schema: schema,
@@ -65,6 +67,7 @@ struct GenevieveApp: App {
         MenuBarExtra {
             GenevieveMenuView()
                 .environmentObject(aiService)
+                .environmentObject(coordinator)
         } label: {
             MenuBarIcon(isProcessing: aiService.isProcessing)
         }
@@ -129,6 +132,7 @@ struct MenuBarIcon: View {
 
 struct GenevieveMenuView: View {
     @EnvironmentObject var aiService: AIProviderService
+    @EnvironmentObject var coordinator: DraftingCoordinator
     @Environment(\.openSettings) private var openSettings
     @Environment(\.openWindow) private var openWindow
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
@@ -161,8 +165,24 @@ struct GenevieveMenuView: View {
             // Show onboarding if not completed
             if !hasCompletedOnboarding {
                 openWindow(id: "onboarding")
+            } else {
+                // Auto-start coordinator after onboarding
+                await autoStartCoordinatorIfReady()
             }
         }
+    }
+
+    /// Auto-start the coordinator if conditions are met
+    private func autoStartCoordinatorIfReady() async {
+        // Wait a moment for app to fully initialize
+        try? await Task.sleep(for: .seconds(1))
+
+        // Check if we should auto-start
+        guard hasCompletedOnboarding else { return }
+        guard aiService.hasAnyProvider else { return }
+
+        // Start coordinator
+        await coordinator.start()
     }
 
     // MARK: - Subviews
@@ -296,5 +316,6 @@ struct ProviderBadge: View {
 #Preview {
     GenevieveMenuView()
         .environmentObject(AIProviderService())
+        .environmentObject(DraftingCoordinator())
         .frame(width: 280)
 }

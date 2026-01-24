@@ -238,6 +238,33 @@ struct ModelsSettingsTab: View {
             }
 
             Section {
+                Picker("Commentary Model", selection: Binding(
+                    get: { aiService.commentaryModelPreference },
+                    set: { aiService.setCommentaryModelPreference($0) }
+                )) {
+                    ForEach(AIProviderService.CommentaryModelPreference.allCases) { pref in
+                        Text(pref.rawValue).tag(pref)
+                    }
+                }
+
+                // Show currently active model
+                if aiService.hasAnyProvider {
+                    HStack {
+                        Text("Active:")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text(aiService.activeCommentaryModel.displayName)
+                            .foregroundStyle(.secondary)
+                    }
+                    .font(.caption)
+                }
+            } header: {
+                Text("Commentary")
+            } footer: {
+                Text(aiService.commentaryModelPreference.description)
+            }
+
+            Section {
                 ForEach(aiService.availableModels) { model in
                     HStack {
                         VStack(alignment: .leading) {

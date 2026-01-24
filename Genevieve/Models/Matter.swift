@@ -41,6 +41,9 @@ final class Matter {
     @Relationship(deleteRule: .cascade, inverse: \Argument.matter)
     var arguments: [Argument]?
 
+    @Relationship(deleteRule: .nullify)
+    var commentaryEntries: [CommentaryEntry]?
+
     // Notes
     var notes: String?
 
