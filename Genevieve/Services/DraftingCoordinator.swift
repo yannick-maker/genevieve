@@ -50,6 +50,14 @@ final class DraftingCoordinator: ObservableObject {
     private var isInAppSwitch = false
     private var appSwitchStartTime: Date?
 
+    // MARK: - Screen Observation for Commentary
+
+    private var screenObservationTimer: Timer?
+    private let screenObservationInterval: TimeInterval = 5.0 // Check every 5 seconds
+    private var lastWindowContentHash: Int?
+    private var lastCommentaryTime: Date?
+    private let minimumCommentaryInterval: TimeInterval = 15.0 // Minimum 15s between commentary
+
     // MARK: - Initialization
 
     init(modelContext: ModelContext? = nil) {
@@ -134,14 +142,10 @@ final class DraftingCoordinator: ObservableObject {
                     self.metricsCollector.startCollecting()
                     self.commentaryService.setCurrentSession(self.currentSession)
                     self.commentaryService.setCurrentMatter(self.currentMatter)
-
-                    if let context = self.focusedElementDetector.currentContext {
-                        Task { @MainActor in
-                            await self.generateCommentaryWithService(for: context)
-                        }
-                    }
+                    self.startScreenObservation()
                 } else {
                     self.metricsCollector.stopCollecting()
+                    self.stopScreenObservation()
                 }
             }
             .store(in: &cancellables)
@@ -373,10 +377,117 @@ final class DraftingCoordinator: ObservableObject {
         return dominant?.0 ?? "pause"
     }
 
-    /// Send a user message to Genevieve (for dialogue)
+    /// Send a user message for dialogue
     func sendUserMessage(_ message: String) async {
-        let context = focusedElementDetector.currentContext?.surroundingText
+        let windowContent = textService.getWindowContent()
+        let context = windowContent?.visibleText ?? focusedElementDetector.currentContext?.surroundingText
         await commentaryService.sendUserMessage(message, context: context)
+    }
+
+    // MARK: - Screen Observation for Commentary
+
+    /// Start observing the screen for commentary mode (not dependent on text field focus)
+    private func startScreenObservation() {
+        stopScreenObservation()
+
+        // Immediately generate commentary for current screen
+        Task { @MainActor in
+            await self.observeScreenAndGenerateCommentary()
+        }
+
+        // Start periodic observation
+        screenObservationTimer = Timer.scheduledTimer(withTimeInterval: screenObservationInterval, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                await self?.observeScreenAndGenerateCommentary()
+            }
+        }
+    }
+
+    /// Stop screen observation
+    private func stopScreenObservation() {
+        screenObservationTimer?.invalidate()
+        screenObservationTimer = nil
+        lastWindowContentHash = nil
+        lastCommentaryTime = nil
+    }
+
+    /// Observe the current screen and generate commentary if content has changed
+    private func observeScreenAndGenerateCommentary() async {
+        guard commentaryService.isEnabled else { return }
+        guard aiService.hasAnyProvider else { return }
+
+        // Get current window content
+        guard let windowContent = textService.getWindowContent() else { return }
+
+        // Check if content has changed significantly
+        let currentHash = windowContent.contentHash
+        let contentChanged = lastWindowContentHash != currentHash
+        lastWindowContentHash = currentHash
+
+        // Check minimum time interval between commentary
+        let timeSinceLastCommentary = lastCommentaryTime.map { Date().timeIntervalSince($0) } ?? .infinity
+        let enoughTimePassed = timeSinceLastCommentary >= minimumCommentaryInterval
+
+        // Only generate if content changed and enough time has passed (or it's the first time)
+        guard contentChanged || lastCommentaryTime == nil else { return }
+        guard enoughTimePassed else { return }
+
+        // Generate commentary based on visible screen content
+        await generateCommentaryFromScreen(windowContent)
+        lastCommentaryTime = Date()
+    }
+
+    /// Generate commentary from screen observation (not dependent on text field)
+    private func generateCommentaryFromScreen(_ windowContent: AccessibilityTextService.WindowContentInfo) async {
+        guard aiService.hasAnyProvider else { return }
+
+        state = .generating
+        showSidebar()
+
+        // Try to analyze what type of content this is
+        let docType = contextAnalyzer.currentAnalysis?.documentType.rawValue ?? inferDocumentType(from: windowContent)
+
+        await commentaryService.generateCommentary(
+            text: windowContent.visibleText,
+            selectedText: nil,
+            documentType: docType,
+            documentSection: "Unknown",
+            tone: "Neutral",
+            appName: windowContent.appName,
+            windowTitle: windowContent.windowTitle
+        )
+
+        state = .displaying
+    }
+
+    /// Infer document type from window content and app name
+    private func inferDocumentType(from content: AccessibilityTextService.WindowContentInfo) -> String {
+        let text = content.visibleText.lowercased()
+        let app = content.appName.lowercased()
+
+        // Check app-based hints
+        if app.contains("word") || app.contains("pages") || app.contains("docs") {
+            if text.contains("whereas") || text.contains("hereby") || text.contains("party") {
+                return "Contract"
+            }
+            if text.contains("court") || text.contains("plaintiff") || text.contains("defendant") {
+                return "Court Filing"
+            }
+            if text.contains("dear") || text.contains("sincerely") {
+                return "Letter"
+            }
+            return "Document"
+        }
+
+        if app.contains("mail") || app.contains("outlook") {
+            return "Email"
+        }
+
+        if app.contains("browser") || app.contains("chrome") || app.contains("safari") || app.contains("firefox") {
+            return "Web Content"
+        }
+
+        return "Unknown"
     }
 
     // MARK: - App Switching

@@ -620,3 +620,141 @@ extension AccessibilityTextService {
         case clipboard
     }
 }
+
+// MARK: - Window Content Reading
+
+extension AccessibilityTextService {
+    /// Information about the current window's visible content
+    struct WindowContentInfo: Equatable {
+        let appName: String
+        let appBundleID: String
+        let windowTitle: String?
+        let visibleText: String
+        let timestamp: Date
+
+        /// A hash of the content for change detection
+        var contentHash: Int {
+            visibleText.hashValue
+        }
+    }
+
+    /// Get visible text content from the current window
+    func getWindowContent() -> WindowContentInfo? {
+        guard hasAccessibilityPermission else { return nil }
+        guard let frontApp = NSWorkspace.shared.frontmostApplication,
+              let bundleID = frontApp.bundleIdentifier else { return nil }
+
+        let appElement = AXUIElementCreateApplication(frontApp.processIdentifier)
+
+        // Get the focused window
+        var focusedWindowRef: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(
+            appElement,
+            kAXFocusedWindowAttribute as CFString,
+            &focusedWindowRef
+        ) == .success, let windowRef = focusedWindowRef else {
+            return nil
+        }
+
+        let windowElement = windowRef as! AXUIElement
+
+        // Get window title
+        var titleRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(windowElement, kAXTitleAttribute as CFString, &titleRef)
+        let windowTitle = titleRef as? String
+
+        // Recursively collect all text from the window
+        var collectedText: [String] = []
+        collectTextFromElement(windowElement, into: &collectedText, depth: 0, maxDepth: 15)
+
+        let visibleText = collectedText.joined(separator: "\n")
+
+        return WindowContentInfo(
+            appName: frontApp.localizedName ?? "Unknown",
+            appBundleID: bundleID,
+            windowTitle: windowTitle,
+            visibleText: String(visibleText.prefix(10000)), // Limit to ~10k chars
+            timestamp: Date()
+        )
+    }
+
+    /// Recursively collect text content from an accessibility element tree
+    private func collectTextFromElement(_ element: AXUIElement, into texts: inout [String], depth: Int, maxDepth: Int) {
+        guard depth < maxDepth else { return }
+
+        // Get element role
+        var roleRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(element, kAXRoleAttribute as CFString, &roleRef)
+        let role = roleRef as? String
+
+        // Get text value if available
+        var valueRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(element, kAXValueAttribute as CFString, &valueRef)
+        if let text = valueRef as? String, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            texts.append(text)
+        }
+
+        // For static text elements, get the title/description
+        if role == "AXStaticText" || role == "AXHeading" {
+            var titleRef: CFTypeRef?
+            AXUIElementCopyAttributeValue(element, kAXTitleAttribute as CFString, &titleRef)
+            if let title = titleRef as? String, !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                texts.append(title)
+            }
+
+            var descRef: CFTypeRef?
+            AXUIElementCopyAttributeValue(element, kAXDescriptionAttribute as CFString, &descRef)
+            if let desc = descRef as? String, !desc.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                texts.append(desc)
+            }
+        }
+
+        // Recurse into children
+        var childrenRef: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(
+            element,
+            kAXChildrenAttribute as CFString,
+            &childrenRef
+        ) == .success, let children = childrenRef as? [AXUIElement] else {
+            return
+        }
+
+        for child in children {
+            collectTextFromElement(child, into: &texts, depth: depth + 1, maxDepth: maxDepth)
+        }
+    }
+
+    /// Get a summary of visible content (more efficient for change detection)
+    func getWindowContentSummary() -> (appName: String, windowTitle: String?, textPreview: String)? {
+        guard hasAccessibilityPermission else { return nil }
+        guard let frontApp = NSWorkspace.shared.frontmostApplication else { return nil }
+
+        let appElement = AXUIElementCreateApplication(frontApp.processIdentifier)
+
+        // Get window title
+        var focusedWindowRef: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(
+            appElement,
+            kAXFocusedWindowAttribute as CFString,
+            &focusedWindowRef
+        ) == .success, let windowRef = focusedWindowRef else {
+            return nil
+        }
+
+        let windowElement = windowRef as! AXUIElement
+        var titleRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(windowElement, kAXTitleAttribute as CFString, &titleRef)
+        let windowTitle = titleRef as? String
+
+        // Get main content area text (first significant text block)
+        var texts: [String] = []
+        collectTextFromElement(windowElement, into: &texts, depth: 0, maxDepth: 8)
+        let preview = texts.prefix(5).joined(separator: " ").prefix(500)
+
+        return (
+            frontApp.localizedName ?? "Unknown",
+            windowTitle,
+            String(preview)
+        )
+    }
+}
